@@ -2,6 +2,11 @@
 
 This guide explains how our team of three will work together without stepping on each other's files.
 
+| Contributor | Area of Ownership |
+|---|---|---|---|
+| Vishwas Simha V | **Backend** |
+| Yaduraj Nair | **presentations** |
+| Sumedh Rao | **Frontend** |
 ---
 
 ## Team Division of Work
