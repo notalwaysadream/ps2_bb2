@@ -91,14 +91,21 @@ class GnaniTTSClient:
                     message = await ws.recv()
                     if isinstance(message, str):
                         data = json.loads(message)
-                        audio_b64 = data.get("audio", "")
-                        is_final = data.get("is_final", False)
+                        msg_type = data.get("type")
 
-                        if audio_b64:
-                            audio_bytes = base64.b64decode(audio_b64)
-                            await on_audio_chunk(audio_bytes, is_final)
+                        if msg_type == "audio":
+                            audio_payload = data.get("data", {})
+                            audio_b64 = audio_payload.get("audio", "") if isinstance(audio_payload, dict) else data.get("audio", "")
+                            if audio_b64:
+                                audio_bytes = base64.b64decode(audio_b64)
+                                await on_audio_chunk(audio_bytes, False)
 
-                        if is_final:
+                        elif msg_type in ("complete", "end"):
+                            await on_audio_chunk(b"", True)
+                            break
+
+                        elif data.get("is_final"):
+                            await on_audio_chunk(b"", True)
                             break
                     elif isinstance(message, bytes):
                         # Some versions stream binary audio directly

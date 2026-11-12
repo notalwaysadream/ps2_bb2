@@ -29,7 +29,7 @@ GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 
 # Default voice settings
 DEFAULT_VOICE = os.getenv("DEFAULT_VOICE", "Shivani")
-DEFAULT_LANGUAGE = os.getenv("DEFAULT_LANGUAGE", "hi-IN")
+DEFAULT_LANGUAGE = os.getenv("DEFAULT_LANGUAGE", "indic-auto")
 
 # Database & Storage
 DATA_DIR = backend_dir / "app" / "data"

@@ -8,6 +8,7 @@ Browser Mic -> AudioWorklet (16kHz PCM) -> Gnani Prisma STT
 import asyncio
 import json
 import logging
+import re
 from typing import Optional
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -144,12 +145,28 @@ class SessionOrchestrator:
             # Process the finalized utterance through LLM & Guardrails
             await self._process_text_utterance(text)
 
+    def _detect_language(self, text: str) -> str:
+        """Detects whether utterance is in Kannada or Hindi."""
+        if any('\u0C80' <= c <= '\u0CFF' for c in text):
+            return "kn-IN"
+        if any('\u0900' <= c <= '\u097F' for c in text):
+            return "hi-IN"
+        kannada_keywords = {"kannada", "namaskara", "makkalu", "magu", "haalu", "thale", "tale", "novu", "madidini", "kodi", "agide", "illa", "jwara", "rakta", "kudiyalla"}
+        words = set(re.findall(r"\b\w+\b", text.lower()))
+        if words.intersection(kannada_keywords):
+            return "kn-IN"
+        return "hi-IN" if self.language in ("indic-auto", "", None) else self.language
+
     async def _process_text_utterance(self, text: str):
         """Runs LLM extraction, checks MoHFW danger signs, and speaks response."""
+        active_lang = self._detect_language(text)
+        self.language = active_lang
+        self.tts_client.language = active_lang
+
         result: ExtractionResult = await llm_service.process_utterance(
             spoken_text=text,
             current_record=self.current_record,
-            language=self.language
+            language=active_lang
         )
         self.current_record = result.record
 

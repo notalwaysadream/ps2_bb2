@@ -6,19 +6,19 @@
       {
         "id": "mat_bleeding",
         "name": "Vaginal bleeding / bleeding in pregnancy",
-        "keywords": ["bleeding", "khoon aana", "rakthasrava", "blood discharge", "spotting"],
+        "keywords": ["bleeding", "khoon", "rakthasrava", "rakta", "blood discharge", "spotting", "kempu neeru"],
         "action": "Immediate referral to Primary Health Centre (PHC/FRU)"
       },
       {
         "id": "mat_severe_headache",
         "name": "Severe headache / blurred vision / convulsions",
-        "keywords": ["sir dard", "sar dard", "headache", "dhundhla dikhna", "daure", "convulsions", "fits"],
+        "keywords": ["sir dard", "sar dard", "thale novu", "tale novu", "headache", "dhundhla", "kanu kanisalla", "daure", "fits"],
         "action": "Immediate referral to Primary Health Centre (PHC/FRU)"
       },
       {
         "id": "mat_high_fever",
         "name": "High fever with chills or foul discharge",
-        "keywords": ["tez bukhar", "high fever", "badbu wala pani", "chills"],
+        "keywords": ["tez bukhar", "thumba jwara", "jwara", "high fever", "badbu wala pani", "chills"],
         "action": "Immediate referral to Primary Health Centre (PHC/FRU)"
       }
     ],
@@ -26,25 +26,25 @@
       {
         "id": "neo_high_fever",
         "name": "High fever / child unusually cold to touch",
-        "keywords": ["tez bukhar", "high fever", "thanda padna", "hypothermia", "garam sar"],
+        "keywords": ["tez bukhar", "thumba jwara", "jwara", "high fever", "thanda padna", "tumba thanda", "hypothermia", "garam sar"],
         "action": "Immediate referral to Primary Health Centre (PHC/FRU)"
       },
       {
         "id": "neo_poor_feeding",
         "name": "Unable to breastfeed / poor sucking",
-        "keywords": ["doodh nahi pi raha", "not feeding", "cannot suck", "doodh pina band"],
+        "keywords": ["doodh nahi pi raha", "haalu kudiyalla", "haalu kudiyuttilla", "not feeding", "cannot suck", "feed madtilla", "doodh pina band"],
         "action": "Immediate referral to Primary Health Centre (PHC/FRU)"
       },
       {
         "id": "neo_fast_breathing",
         "name": "Fast breathing / chest indrawing",
-        "keywords": ["tez saans", "pasli chalna", "chest indrawing", "fast breathing"],
+        "keywords": ["tez saans", "pasli chalna", "veegavagi usirata", "usirata thondare", "chest indrawing", "fast breathing"],
         "action": "Immediate referral to Primary Health Centre (PHC/FRU)"
       },
       {
         "id": "neo_convulsions",
         "name": "Convulsions / lethargy / unconsciousness",
-        "keywords": ["daura", "fits", "behosh", "sust", "unresponsive"],
+        "keywords": ["daura", "fits", "behosh", "sust", "murchhe", "unresponsive"],
         "action": "Immediate referral to Primary Health Centre (PHC/FRU)"
       }
     ]
