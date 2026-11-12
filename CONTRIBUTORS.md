@@ -6,3 +6,4 @@
 |---|---|---|---|
 | Vishwas Simha V | **Backend** |
 | Yaduraj Nair | **presentations** |
+| Sumedh Rao | **Frontend** |
