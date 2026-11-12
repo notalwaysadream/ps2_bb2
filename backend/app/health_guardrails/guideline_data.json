@@ -1,0 +1,52 @@
+{
+  "source": "MoHFW / NHM ASHA Module 6 & 7: Skills That Save Lives",
+  "citation": "National Health Mission, Ministry of Health and Family Welfare, Government of India. Home Based Newborn Care & Maternal Health Danger Signs.",
+  "danger_signs": {
+    "pregnancy_and_postpartum": [
+      {
+        "id": "mat_bleeding",
+        "name": "Vaginal bleeding / bleeding in pregnancy",
+        "keywords": ["bleeding", "khoon aana", "rakthasrava", "blood discharge", "spotting"],
+        "action": "Immediate referral to Primary Health Centre (PHC/FRU)"
+      },
+      {
+        "id": "mat_severe_headache",
+        "name": "Severe headache / blurred vision / convulsions",
+        "keywords": ["sir dard", "sar dard", "headache", "dhundhla dikhna", "daure", "convulsions", "fits"],
+        "action": "Immediate referral to Primary Health Centre (PHC/FRU)"
+      },
+      {
+        "id": "mat_high_fever",
+        "name": "High fever with chills or foul discharge",
+        "keywords": ["tez bukhar", "high fever", "badbu wala pani", "chills"],
+        "action": "Immediate referral to Primary Health Centre (PHC/FRU)"
+      }
+    ],
+    "newborn_and_child": [
+      {
+        "id": "neo_high_fever",
+        "name": "High fever / child unusually cold to touch",
+        "keywords": ["tez bukhar", "high fever", "thanda padna", "hypothermia", "garam sar"],
+        "action": "Immediate referral to Primary Health Centre (PHC/FRU)"
+      },
+      {
+        "id": "neo_poor_feeding",
+        "name": "Unable to breastfeed / poor sucking",
+        "keywords": ["doodh nahi pi raha", "not feeding", "cannot suck", "doodh pina band"],
+        "action": "Immediate referral to Primary Health Centre (PHC/FRU)"
+      },
+      {
+        "id": "neo_fast_breathing",
+        "name": "Fast breathing / chest indrawing",
+        "keywords": ["tez saans", "pasli chalna", "chest indrawing", "fast breathing"],
+        "action": "Immediate referral to Primary Health Centre (PHC/FRU)"
+      },
+      {
+        "id": "neo_convulsions",
+        "name": "Convulsions / lethargy / unconsciousness",
+        "keywords": ["daura", "fits", "behosh", "sust", "unresponsive"],
+        "action": "Immediate referral to Primary Health Centre (PHC/FRU)"
+      }
+    ]
+  }
+}
