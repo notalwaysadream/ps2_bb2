@@ -333,8 +333,8 @@ footer {
   </section>
 
   <section class="card">
-    <h2>Follow-up list</h2>
-    <ul id="fu"><li style="color:var(--mute);list-style:none;margin-left:-20px">Appears after the visit is recorded</li></ul>
+    <h2>Follow-up list <span id="fuCount" style="font-weight:400;text-transform:none;font-size:13px;color:var(--mute)"></span></h2>
+    <ul id="fu"><li style="color:var(--mute);list-style:none;margin-left:-20px">Loading follow-ups…</li></ul>
   </section>
 
   <!-- Saved Database Records -->
@@ -373,7 +373,7 @@ const KNOWN = [
 ];
 const HIDE = ["id", "language", "is_confirmed", "created_at", "updated_at", "timestamp", "transcript", "raw_transcript", "danger_flag", "danger_flags", "danger_signs", "flagged", "is_flagged", "danger_alerts"];
 
-let ws, ctx, stream, proc, live = false, playing = [], playT = 0, lastVoice = 0, waitingAudio = false, prev = {}, dangers = [], lastRecord = {}, timers = [];
+let ws, ctx, stream, proc, live = false, playing = [], playT = 0, lastVoice = 0, waitingAudio = false, prev = {}, dangers = [], lastRecord = {}, timers = [], dbFollowUps = [];
 
 function val(v) {
   if (v == null || v === "") return "";
@@ -410,14 +410,59 @@ function renderRecord(r) {
 
 function renderFollowups() {
   const r = lastRecord, items = [];
-  dangers.forEach(d => items.push("Refer to PHC now: " + d));
   const get = keys => { const k = keys.find(x => x in r); return k ? val(r[k]) : ""; };
   const vac = get(KNOWN[4][1]), nxt = get(KNOWN[6][1]);
-  if (vac) items.push("Vaccinations due: " + vac);
-  if (nxt) items.push("Next visit: " + nxt);
+  const activeName = get(KNOWN[1][1]);
+  const activeId = get(KNOWN[0][1]);
+  const activeLabel = (activeName && activeId) ? `${activeName} (ID: ${activeId})` : (activeName || (activeId ? `ID: ${activeId}` : "Current note"));
+
+  // 1. Active visit danger alerts
+  dangers.forEach(d => {
+    items.push({
+      html: `<span class="badge" style="margin-right:6px">URGENT</span> <b>${esc(activeLabel)}</b>: Refer to PHC now: ${esc(d)} &bull; <span style="color:var(--red);font-weight:600">Immediate</span>`,
+      isUrgent: true
+    });
+  });
+
+  // 2. Active visit next visit date
+  if (nxt) {
+    items.push({
+      html: `<span style="display:inline-block;background:var(--amber-bg);color:var(--amber);font-size:11px;font-weight:700;padding:2px 6px;border-radius:6px;margin-right:6px">ACTIVE</span> <b>${esc(activeLabel)}</b>: Next visit scheduled &bull; <span style="color:var(--green);font-weight:600">${esc(nxt)}</span>`,
+      isUrgent: false
+    });
+  }
+
+  // 3. Active visit vaccinations due
+  if (vac) {
+    items.push({
+      html: `<span style="display:inline-block;background:var(--amber-bg);color:var(--amber);font-size:11px;font-weight:700;padding:2px 6px;border-radius:6px;margin-right:6px">ACTIVE</span> <b>${esc(activeLabel)}</b>: Vaccinations due: ${esc(vac)}`,
+      isUrgent: false
+    });
+  }
+
+  // 4. Saved database follow-ups (prebuilt seed records + previously saved visits)
+  dbFollowUps.forEach(f => {
+    const isUrg = f.urgent || f.type === "URGENT_PHC_REFERRAL";
+    if (isUrg) {
+      items.push({
+        html: `<span class="badge" style="margin-right:6px">URGENT</span> <b>${esc(f.label || (f.beneficiary_id ? 'ID: ' + f.beneficiary_id : 'Beneficiary'))}</b>: ${esc(f.details)} &bull; <span style="color:var(--red);font-weight:600">${esc(f.date || 'Immediate')}</span>`,
+        isUrgent: true
+      });
+    } else {
+      items.push({
+        html: `<b>${esc(f.label || (f.beneficiary_id ? 'ID: ' + f.beneficiary_id : 'Beneficiary'))}</b>: ${esc(f.details)} &bull; <span style="color:var(--green);font-weight:600">${esc(f.date)}</span>`,
+        isUrgent: false
+      });
+    }
+  });
+
+  if ($("fuCount")) {
+    $("fuCount").textContent = items.length ? `(${items.length})` : "";
+  }
+
   $("fu").innerHTML = items.length
-    ? items.map(i => `<li>${esc(i)}</li>`).join("")
-    : '<li style="color:var(--mute);list-style:none;margin-left:-20px">Appears after the visit is recorded</li>';
+    ? items.map(i => `<li>${i.html}</li>`).join("")
+    : '<li style="color:var(--mute);list-style:none;margin-left:-20px">No upcoming follow-ups scheduled</li>';
 }
 
 function setState(t, h) {
@@ -464,6 +509,19 @@ async function loadDbRecords() {
   }
 }
 
+async function loadFollowUps() {
+  try {
+    const res = await fetch(CONFIG.API_URL + "/follow-ups");
+    if (res.ok) {
+      const data = await res.json();
+      dbFollowUps = data.follow_ups || [];
+      renderFollowups();
+    }
+  } catch (e) {
+    console.warn("Could not load follow-ups", e);
+  }
+}
+
 /* Backend events */
 function handle(m) {
   switch (m.event) {
@@ -507,6 +565,7 @@ function handle(m) {
       setState("Saved to database", "Tap the mic for the next visit");
       $("say").classList.remove("on");
       loadDbRecords();
+      loadFollowUps();
       break;
     case "language_changed":
       console.log("Language changed to", m.language);
@@ -664,6 +723,7 @@ $("lang").onchange = () => send({ event: "set_language", language: $("lang").val
 renderRecord({});
 openWS();
 loadDbRecords();
+loadFollowUps();
 </script>
 </body>
 </html>

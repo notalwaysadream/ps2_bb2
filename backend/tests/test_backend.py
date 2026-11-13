@@ -183,3 +183,28 @@ async def test_indic_name_extraction_and_ai_disclosure():
     assert res2.record.beneficiary_name in ("ಶಾಂತಲಾ", "Shantala")
     spoken2 = res2.spoken_response.lower()
     assert not spoken2.startswith("naanu ondu ai") and not spoken2.startswith("ನಾನು ಒಂದು ai")
+
+@pytest.mark.asyncio
+async def test_readback_beneficiary_id_before_name_and_next_visit():
+    llm = LLMService()
+    # 1. Default readback logic
+    rec = VisitRecord(
+        beneficiary_id="4408",
+        beneficiary_name="Shantala",
+        visit_type="ANC checkup",
+        weight=52.0,
+        next_visit_date="28 November"
+    )
+    spoken = llm._generate_default_readback(rec, "kn-IN")
+    assert "Beneficiary ID 4408, Shantala" in spoken
+    assert "next visit 28 November" in spoken
+
+    # 2. Extraction with next visit phrases
+    res = await llm.process_utterance(
+        "Beneficiary ID 1042, name Sunita Devi, ANC checkup, next visit date 28th November.",
+        language="kn-IN"
+    )
+    assert res.record.beneficiary_id == "1042"
+    assert "Sunita" in (res.record.beneficiary_name or "")
+    assert res.record.next_visit_date is not None
+    assert "Beneficiary ID 1042" in res.spoken_response

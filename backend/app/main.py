@@ -62,28 +62,54 @@ async def get_follow_up_list():
     records = await get_records(limit=100)
     follow_ups = []
     for r in records:
+        name = r.beneficiary_name.strip() if r.beneficiary_name else ""
+        bid = r.beneficiary_id.strip() if r.beneficiary_id else ""
+        if name and bid:
+            label = f"{name} (ID: {bid})"
+        elif name:
+            label = name
+        elif bid:
+            label = f"ID: {bid}"
+        else:
+            label = "Beneficiary"
+
+        # 1. Urgent PHC referrals
         if r.danger_signs_flagged:
             for d in r.danger_signs_flagged:
                 follow_ups.append({
                     "beneficiary_id": r.beneficiary_id,
+                    "beneficiary_name": r.beneficiary_name,
+                    "label": label,
                     "type": "URGENT_PHC_REFERRAL",
-                    "details": f"Refer to PHC immediately: {d}",
-                    "date": "IMMEDIATE"
+                    "details": f"Urgent PHC referral: {d}",
+                    "date": "Immediate",
+                    "urgent": True
                 })
+
+        # 2. Scheduled next visit
+        if r.next_visit_date:
+            follow_ups.append({
+                "beneficiary_id": r.beneficiary_id,
+                "beneficiary_name": r.beneficiary_name,
+                "label": label,
+                "type": "SCHEDULED_VISIT",
+                "details": f"Next visit ({r.visit_type or 'Checkup'})",
+                "date": r.next_visit_date,
+                "urgent": False
+            })
+
+        # 3. Vaccinations due or administered
         if r.vaccinations_due:
             follow_ups.append({
                 "beneficiary_id": r.beneficiary_id,
+                "beneficiary_name": r.beneficiary_name,
+                "label": label,
                 "type": "VACCINATION_DUE",
-                "details": f"Vaccinations due: {', '.join(r.vaccinations_due)}",
-                "date": r.next_visit_date or "Pending"
+                "details": f"Vaccinations: {', '.join(r.vaccinations_due)}",
+                "date": r.next_visit_date or "Pending",
+                "urgent": False
             })
-        elif r.next_visit_date:
-            follow_ups.append({
-                "beneficiary_id": r.beneficiary_id,
-                "type": "SCHEDULED_VISIT",
-                "details": f"Next home visit scheduled ({r.visit_type or 'General'})",
-                "date": r.next_visit_date
-            })
+
     return {"total": len(follow_ups), "follow_ups": follow_ups}
 
 @app.get("/health")

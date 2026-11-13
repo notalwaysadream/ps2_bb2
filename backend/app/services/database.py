@@ -128,35 +128,31 @@ async def init_db(seed_samples: bool = True):
         await db.commit()
 
         if seed_samples:
-            async with db.execute("SELECT COUNT(*) FROM visit_records") as cursor:
-                row = await cursor.fetchone()
-                count = row[0] if row else 0
-            if count == 0:
-                for s in get_seed_records():
-                    await db.execute("""
-                        INSERT OR REPLACE INTO visit_records (
-                            id, created_at, beneficiary_id, beneficiary_name, visit_type, weight,
-                            vaccinations_due, supplements_given, next_visit_date,
-                            danger_signs_flagged, is_urgent_referral, raw_transcript,
-                            language, is_confirmed
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (
-                        s.id,
-                        s.created_at,
-                        s.beneficiary_id,
-                        s.beneficiary_name,
-                        s.visit_type,
-                        s.weight,
-                        json.dumps(s.vaccinations_due),
-                        json.dumps(s.supplements_given),
-                        s.next_visit_date,
-                        json.dumps(s.danger_signs_flagged),
-                        1 if s.is_urgent_referral else 0,
-                        s.raw_transcript,
-                        s.language,
-                        1 if s.is_confirmed else 0
-                    ))
-                await db.commit()
+            for s in get_seed_records():
+                await db.execute("""
+                    INSERT OR IGNORE INTO visit_records (
+                        id, created_at, beneficiary_id, beneficiary_name, visit_type, weight,
+                        vaccinations_due, supplements_given, next_visit_date,
+                        danger_signs_flagged, is_urgent_referral, raw_transcript,
+                        language, is_confirmed
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    s.id,
+                    s.created_at,
+                    s.beneficiary_id,
+                    s.beneficiary_name,
+                    s.visit_type,
+                    s.weight,
+                    json.dumps(s.vaccinations_due),
+                    json.dumps(s.supplements_given),
+                    s.next_visit_date,
+                    json.dumps(s.danger_signs_flagged),
+                    1 if s.is_urgent_referral else 0,
+                    s.raw_transcript,
+                    s.language,
+                    1 if s.is_confirmed else 0
+                ))
+            await db.commit()
 
 async def save_record(record: VisitRecord) -> VisitRecord:
     """Inserts or updates a visit record."""

@@ -3,7 +3,7 @@
 **Problem Statement 1: Healthcare Track &bull; Gnani Voice Hackathon 2026**
 
 [![Live Cloud Demo](https://img.shields.io/badge/Live_Demo-asha--dhwani.onrender.com-success?style=for-the-badge&logo=render)](https://asha-dhwani.onrender.com/)
-[![Tests](https://img.shields.io/badge/Pytest-15%20Passed-brightgreen?style=for-the-badge)](https://github.com/notalwaysadream/ps2_bb2)
+[![Tests](https://img.shields.io/badge/Pytest-16%20Passed-brightgreen?style=for-the-badge)](https://github.com/notalwaysadream/ps2_bb2)
 [![STT / TTS](https://img.shields.io/badge/Gnani_Voice-Prisma_v3_+_Timbre_v3-blue?style=for-the-badge)](https://gnani.ai/)
 
 ---
@@ -51,16 +51,22 @@ The worker speaks naturally in her local language mixed with English (*Kannada K
 | **Speech-Layer Depth** *(20%)* | Full-duplex WebSocket streaming (`16kHz PCM16`) using **Gnani Prisma v3.0** STT and **Timbre v3.0** TTS; conversational pause buffer (`4.0s`) for natural pacing between sentences; instant barge-in interruption; and immediate tap-to-conclude support. |
 | **Fit for Target User** *(20%)* | Works on low-cost Android smartphones in any standard browser without requiring app store installation; high-contrast cards, large tap targets, and clear Indic voice prompts. |
 | **Workflow Innovation** *(10%)* | Goes beyond a basic chatbot: structured live card previews, interactive spoken read-back, automatic follow-up schedule generation, and one-tap emergency referral banners. |
-| **Responsible AI & Compliance** *(10%)* | **Zero diagnostic or prescription hallucination**; strictly follows MoHFW Modules 6 & 7 danger-sign referral protocols; uses synthetic beneficiary IDs; and includes mandatory 2-second AI identity disclosure. |
-| **Demo & Documentation** *(10%)* | Fully functional live cloud deployment, comprehensive test suite (15/15 unit and integration tests passing), and turnkey local setup scripts for both macOS/Linux and Windows. |
+| **Responsible AI & Compliance** *(10%)* | **Zero diagnostic or prescription hallucination**; strictly follows MoHFW Modules 6 & 7 danger-sign referral protocols; uses synthetic beneficiary IDs only; and includes mandatory 2-second AI identity disclosure. |
+| **Demo & Documentation** *(10%)* | Fully functional live cloud deployment, comprehensive test suite (16/16 unit and integration tests passing), and turnkey local setup scripts for both macOS/Linux and Windows. |
 
 ---
 
-## MoHFW Clinical Danger-Sign Protocols
+## MoHFW Clinical Danger-Sign Protocols (Public Health Guideline Citation)
 
-Per the hackathon guidelines, danger-sign escalation is strictly grounded in official Government of India public health guidelines:
+> [!IMPORTANT]
+> **Hackathon Track-Specific Requirement**:
+> *"Track-specific guardrails. Synthetic beneficiaries only. Teams build their danger-sign list from a public health guideline and cite it in the README."*
+
+Per the hackathon guidelines, danger-sign escalation in ASHA Dhwani is strictly grounded in official Government of India public health guidelines:
 - **Source**: National Health Mission (NHM), Ministry of Health and Family Welfare (MoHFW), Government of India.
-- **Reference**: *ASHA Training Modules 6 & 7: Skills That Save Lives (Maternal & Newborn Care)*.
+- **Official Document**: *ASHA Training Modules 6 & 7: Skills That Save Lives - Home Based Newborn Care & Maternal Health Danger Signs*.
+- **Official Guideline Portal**: [https://nhm.gov.in](https://nhm.gov.in)
+- **Detailed Clinical Mapping & Citation Documentation**: [docs/guidelines/mohfw_danger_signs.md](docs/guidelines/mohfw_danger_signs.md)
 
 The system monitors spoken notes against two clinical symptom categories:
 
@@ -77,7 +83,9 @@ The system monitors spoken notes against two clinical symptom categories:
 - Jaundice / yellowness of palms and soles within 24 hours of birth.
 - Redness, pus, or foul discharge from the umbilical cord (*naabhi*).
 
-> **Clinical Guardrail**: When a danger sign is detected, ASHA Dhwani advises immediate referral to the Primary Health Centre (PHC) or First Referral Unit (FRU) in the worker's spoken language and marks the record with an emergency badge. **The system never provides medical diagnosis or drug prescriptions.**
+> **Clinical Guardrail**: When any danger sign from the MoHFW list is detected, ASHA Dhwani immediately advises referral to the Primary Health Centre (PHC) or First Referral Unit (FRU) in the worker's spoken language (*"Yeh gambhir lakshan hai. Beneficiary ko turant nazdiki PHC le jayein."*) and marks the record with an emergency badge. **The system never provides medical diagnosis or drug prescriptions.**
+> 
+> See the complete guideline reference at [docs/guidelines/mohfw_danger_signs.md](docs/guidelines/mohfw_danger_signs.md).
 
 ---
 
@@ -173,7 +181,7 @@ npm run dev
 
 ## Running the Automated Test Suite
 
-The test suite validates WebSocket lifecycles, streaming audio chunks, Groq LLM extraction, Indic name preservation, and MoHFW danger-sign guardrails:
+The test suite validates WebSocket lifecycles, streaming audio chunks, Groq LLM extraction, Indic name preservation, Beneficiary ID priority readback, next visit date extraction, and MoHFW danger-sign guardrails:
 
 ```bash
 cd backend
@@ -184,22 +192,23 @@ pytest tests/ -v
 Expected result:
 ```text
 tests/test_api.py::test_health_endpoint PASSED                           [  6%]
-tests/test_api.py::test_danger_signs_endpoint PASSED                     [ 13%]
-tests/test_api.py::test_records_rest_flow PASSED                         [ 20%]
-tests/test_backend.py::test_danger_signs_pregnancy_bleeding PASSED       [ 26%]
-tests/test_backend.py::test_danger_signs_newborn_fever_and_poor_feeding PASSED [ 33%]
-tests/test_backend.py::test_normal_anc_no_danger_signs PASSED            [ 40%]
-tests/test_backend.py::test_database_crud PASSED                         [ 46%]
-tests/test_backend.py::test_extraction_and_voice_correction PASSED       [ 53%]
-tests/test_backend.py::test_kannada_extraction_and_readback PASSED       [ 60%]
-tests/test_backend.py::test_audio_rms_and_vad PASSED                     [ 66%]
-tests/test_backend.py::test_indic_name_extraction_and_ai_disclosure PASSED [ 73%]
-tests/test_websocket.py::test_websocket_text_flow_and_readback PASSED    [ 80%]
-tests/test_websocket.py::test_websocket_danger_sign_escalation PASSED    [ 86%]
+tests/test_api.py::test_danger_signs_endpoint PASSED                     [ 12%]
+tests/test_api.py::test_records_rest_flow PASSED                         [ 18%]
+tests/test_backend.py::test_danger_signs_pregnancy_bleeding PASSED       [ 25%]
+tests/test_backend.py::test_danger_signs_newborn_fever_and_poor_feeding PASSED [ 31%]
+tests/test_backend.py::test_normal_anc_no_danger_signs PASSED            [ 37%]
+tests/test_backend.py::test_database_crud PASSED                         [ 43%]
+tests/test_backend.py::test_extraction_and_voice_correction PASSED       [ 50%]
+tests/test_backend.py::test_kannada_extraction_and_readback PASSED       [ 56%]
+tests/test_backend.py::test_audio_rms_and_vad PASSED                     [ 62%]
+tests/test_backend.py::test_indic_name_extraction_and_ai_disclosure PASSED [ 68%]
+tests/test_backend.py::test_readback_beneficiary_id_before_name_and_next_visit PASSED [ 75%]
+tests/test_websocket.py::test_websocket_text_flow_and_readback PASSED    [ 81%]
+tests/test_websocket.py::test_websocket_danger_sign_escalation PASSED    [ 87%]
 tests/test_websocket.py::test_websocket_binary_audio_streaming PASSED    [ 93%]
 tests/test_websocket.py::test_websocket_stop_recording_flow PASSED       [100%]
 
-======================== 15 passed in ~0.15s =========================
+======================== 16 passed in ~0.14s =========================
 ```
 
 ---
@@ -291,10 +300,27 @@ This tool provides a guided menu to test:
 
 ## Responsible AI & Ethical Guardrails
 
-1. **Synthetic Data**: All beneficiary names, identification numbers, and contact details are purely synthetic examples created for hackathon demonstration purposes.
-2. **Clinical Boundaries**: The assistant is an administrative field tool. It does not provide diagnoses, predict clinical outcomes, or prescribe drugs. All escalations defer to the nearest government Primary Health Centre.
-3. **Transparent Identity**: The agent identifies itself as an automated AI assistant (*"Naanu ondu AI sahayaka..."*) before reading back patient details.
-4. **Privacy**: Audio streams are processed in memory and are not stored or archived to disk.
+1. **Track-Specific Clinical Guardrails & Public Health Guideline Citation**:
+   - In accordance with the hackathon specifications (*"Track-specific guardrails. Synthetic beneficiaries only. Teams build their danger-sign list from a public health guideline and cite it in the README."*), danger signs are strictly compiled from the official Ministry of Health and Family Welfare (MoHFW) / National Health Mission (NHM) guidelines:
+     - Document: *Home Based Newborn Care and Maternal Health Danger Signs (ASHA Modules 6 and 7)*.
+     - Public Health Reference: [https://nhm.gov.in](https://nhm.gov.in)
+     - Complete clinical mapping and referral protocol documentation: [docs/guidelines/mohfw_danger_signs.md](docs/guidelines/mohfw_danger_signs.md).
+   - Behavior: When spoken notes mention any danger sign from the list (such as bleeding during pregnancy or high fever and refusal to feed in a newborn), the system interrupts to direct the worker to refer the beneficiary to the Primary Health Centre (PHC) immediately, and flags the record with an emergency badge.
+
+2. **Synthetic Beneficiaries Only**:
+   - All beneficiary names (*Sunita Devi*, *Priya Gowda*, *Baby of Lakshmi*, *Baby of Rekha*, *Kavita Devi*), identification numbers (`KA-BLR-4408`, `KA-MYS-8821`, `UP-LKO-3312`), and clinical visit notes in this repository and the live demonstration are purely synthetic. No real patient data or protected health information (PHI) is ever used.
+
+3. **Zero Diagnostic or Prescription Hallucination**:
+   - The assistant is strictly an administrative voice field documentation tool. It never provides medical diagnoses, predicts pathology, or prescribes medication or dosages. All critical cases are escalated to the nearest government Primary Health Centre.
+
+4. **Transparent AI Identity Disclosure**:
+   - In adherence to responsible AI standards, the agent announces that it is an automated AI assistant (*"Naanu ondu AI sahayaka..."* in Kannada, *"Main ek AI sahayak hoon..."* in Hindi, *"I am an AI assistant..."* in English) before reading back patient details.
+
+5. **Spoken Readback Format (Beneficiary ID First)**:
+   - Spoken read-backs always announce the Beneficiary ID first, followed by the name (*"Beneficiary ID 4408, Shantala..."*), preventing identification confusion in rural field settings where common names recur.
+
+6. **Privacy & Ephemeral Audio**:
+   - Audio streams are processed purely in memory for real-time STT streaming and are never persisted or stored to disk.
 
 ---
 
@@ -318,7 +344,7 @@ ps2_bb2/
 │   │   │   └── danger_signs.py    # MoHFW Modules 6 & 7 clinical rules
 │   │   └── models/
 │   │       └── visit_record.py    # Pydantic schemas for visits & alerts
-│   ├── tests/                     # 15 backend unit and integration tests
+│   ├── tests/                     # 16 backend unit and integration tests
 │   └── test_cli.py                # Guided terminal testing menu
 ├── frontend/
 │   ├── index.html                 # Production single-file web client

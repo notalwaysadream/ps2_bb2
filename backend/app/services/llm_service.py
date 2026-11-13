@@ -20,9 +20,15 @@ STRICT NAME & ID EXTRACTION RULES:
 1. 'beneficiary_name': ALWAYS extract the mother's, child's, or patient's name into this field (e.g. 'Shantala', 'ಶಾಂತಲಾ', 'Shakuntala', 'Sunita Devi', 'Radha').
    - Workers frequently state names like: "name Shantala", "ಹೆಸರು ಶಾಂತಲಾ", "Shakuntala avara 3rd ANC", "Sunita Devi ka visit".
    - NEVER leave 'beneficiary_name' empty or null if a person's name was spoken.
-2. 'beneficiary_id': Extract numeric or alphanumeric codes (e.g. '4408', '1042', 'B-12').
+2. 'beneficiary_id': Extract numeric or alphanumeric codes (e.g. '4408', '1042', 'B-12', 'KA-BLR-4408').
    - If both are spoken ("Beneficiary ID 4408, name Shantala"), put '4408' in beneficiary_id and 'Shantala' in beneficiary_name.
    - If only a name is given with no numeric ID ("Shakuntala avara visit"), put 'Shakuntala' in beneficiary_name and beneficiary_id as null.
+3. SPOKEN READBACK BENEFICIARY ORDER (CRITICAL):
+   - When stating beneficiary information in 'spoken_readback', you MUST ALWAYS state the Beneficiary ID FIRST, followed by the Name:
+     Format: "Beneficiary ID {id}, {name}" (e.g. "Beneficiary ID 4408, Shantala" or "Beneficiary ID KA-BLR-4408, Sunita Devi").
+   - NEVER say "Beneficiary {name} ID {id}" or "Beneficiary {name} ({id})". Beneficiary ID MUST precede the name.
+   - If only ID is present: "Beneficiary ID {id}"
+   - If only Name is present: "Beneficiary {name}"
 
 STRICT LANGUAGE RULES - NEVER MIX LANGUAGES:
 You MUST generate 'spoken_readback' strictly in the single requested language. DO NOT mix Hindi words into Kannada or English, and DO NOT mix Kannada words into Hindi.
@@ -31,8 +37,8 @@ You MUST generate 'spoken_readback' strictly in the single requested language. D
    - spoken_readback MUST be in pure Kannada + English.
    - NEVER use Hindi words (NEVER use 'Maine note kiya', 'wazan', 'kya yeh theek hai', 'aur', 'diya gaya').
    - Readback template format:
-     "Naanu note maadiddene: Beneficiary {name} ({id}), {visit_type}, weight {weight} kg, {vaccines}, next visit {date}. Idu sariyagidiya?"
-     (Or in Kannada script if the user spoke in Kannada script: "ನಾನು ನೋಟ್ ಮಾಡಿದ್ದೇನೆ: Beneficiary {name} ({id}), {visit_type}, ತೂಕ {weight} kg, {vaccines}, ಮುಂದಿನ ಭೇಟಿ {date}. ಇದು ಸರಿಯಾಗಿದೆಯೇ?")
+     "Naanu note maadiddene: Beneficiary ID {id}, {name}, {visit_type}, weight {weight} kg, {vaccines}, next visit {date}. Idu sariyagidiya?"
+     (Or in Kannada script if the user spoke in Kannada script: "ನಾನು ನೋಟ್ ಮಾಡಿದ್ದೇನೆ: Beneficiary ID {id}, {name}, {visit_type}, ತೂಕ {weight} kg, {vaccines}, ಮುಂದಿನ ಭೇಟಿ {date}. ಇದು ಸರಿಯಾಗಿದೆಯೇ?")
    - If confirmed by worker ("houdu", "sari", "haudu", "save", "theek ide"):
      "Record save aagide."
    - If correcting mistake ("alla", "tappu", "illa", "change maadi"):
@@ -42,7 +48,7 @@ You MUST generate 'spoken_readback' strictly in the single requested language. D
    - spoken_readback MUST be in pure Hindi + English.
    - NEVER use Kannada words.
    - Readback template format:
-     "Maine note kiya: Beneficiary {name} ({id}), {visit_type}, wazan {weight} kilo, {vaccines}, agla visit {date}. Kya yeh theek hai?"
+     "Maine note kiya: Beneficiary ID {id}, {name}, {visit_type}, wazan {weight} kilo, {vaccines}, agla visit {date}. Kya yeh theek hai?"
    - If confirmed by worker ("haan", "theek hai", "sahi hai", "save"):
      "Record save ho gaya hai."
    - If correcting mistake ("nahi", "galat", "change"):
@@ -51,17 +57,17 @@ You MUST generate 'spoken_readback' strictly in the single requested language. D
 3. If Language is 'en-IN' (English):
    - spoken_readback MUST be in English.
    - Readback template format:
-     "I have noted: Beneficiary {name} ({id}), {visit_type}, weight {weight} kg, {vaccines}, next visit {date}. Is this correct?"
+     "I have noted: Beneficiary ID {id}, {name}, {visit_type}, weight {weight} kg, {vaccines}, next visit {date}. Is this correct?"
    - If confirmed: "Record has been saved successfully."
    - If correcting: "I have updated the record. Does this look correct?"
 
 4. If Language is 'te-IN' (Telugu):
-   - Readback format: "Nenu note chesanu: Beneficiary {name} ({id}), {visit_type}, weight {weight} kg, {vaccines}, next visit {date}. Idi sarigga unda?"
+   - Readback format: "Nenu note chesanu: Beneficiary ID {id}, {name}, {visit_type}, weight {weight} kg, {vaccines}, next visit {date}. Idi sarigga unda?"
    - If confirmed: "Record save cheyabadindi."
    - If correcting: "Nenu update chesanu. Ippudu sarigga unda?"
 
 5. If Language is 'ta-IN' (Tamil):
-   - Readback format: "Naan note seythen: Beneficiary {name} ({id}), {visit_type}, weight {weight} kg, {vaccines}, next visit {date}. Ithu sariyaaga ullatha?"
+   - Readback format: "Naan note seythen: Beneficiary ID {id}, {name}, {visit_type}, weight {weight} kg, {vaccines}, next visit {date}. Ithu sariyaaga ullatha?"
    - If confirmed: "Record save seyyappattathu."
    - If correcting: "Naan update seythullen. Ippo sariyaaga irukka?"
 
@@ -279,7 +285,10 @@ class LLMService:
         ]
         negative_words = ["nahi", "no", "galat", "change", "alla", "illa", "tappu", "badalisi"]
 
-        if any(w in lower for w in affirmative_words) and not any(neg in lower for neg in negative_words):
+        has_neg = bool(re.search(r"\b(?:" + "|".join(re.escape(w) for w in negative_words) + r")\b", lower))
+        has_aff = bool(re.search(r"\b(?:" + "|".join(re.escape(w) for w in affirmative_words) + r")\b", lower))
+
+        if has_aff and not has_neg:
             record.is_confirmed = True
             return ExtractionResult(
                 record=record,
@@ -337,11 +346,15 @@ class LLMService:
                 record.supplements_given.append("IFA goli / tablets")
 
         # Next visit date
-        date_match = re.search(r"(?:next visit|agla visit|mundina visit|visit)\s*(?:ko|ide)?\s*([0-9]+\s+[a-zA-Z]+|[a-zA-Z]+\s+[0-9]+)", text, re.IGNORECASE)
+        date_match = re.search(
+            r"(?:next\s*visit\s*(?:date)?|mundina\s*(?:visit|bheti|checkup)\s*(?:date)?|agla\s*(?:visit|checkup)\s*(?:date)?|next\s*checkup)\s*(?:is|ko|ide|on|ge|:)?\s*([0-9]{1,2}(?:st|nd|rd|th)?\s+[a-zA-Z]+|[a-zA-Z]+\s+[0-9]{1,2}(?:st|nd|rd|th)?|[0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{1,2}[/-][0-9]{1,2}(?:[/-][0-9]{2,4})?|(?:after\s*)?[0-9]+\s*days?|day\s*[0-9]+|[0-9]{1,2}(?:st|nd|rd|th)?(?:\s*(?:tariku|tareekh))?)",
+            text,
+            re.IGNORECASE
+        )
         if date_match:
-            record.next_visit_date = date_match.group(1)
+            record.next_visit_date = date_match.group(1).strip()
 
-        is_correction = any(neg in lower for neg in negative_words)
+        is_correction = has_neg
         status = "CORRECTION_APPLIED" if is_correction else "READBACK_PENDING"
         spoken = self._get_correction_phrase(language) if is_correction else self._generate_default_readback(record, language)
 
@@ -372,14 +385,19 @@ class LLMService:
         lang_prefix = (language or "kn-IN").split("-")[0].lower()
         parts = []
 
-        name_str = f"{record.beneficiary_name}" if record.beneficiary_name else ""
-        id_str = f"ID {record.beneficiary_id}" if record.beneficiary_id else ""
-        if name_str and id_str:
-            parts.append(f"Beneficiary {name_str} ({id_str})")
-        elif name_str:
-            parts.append(f"Beneficiary {name_str}")
+        name_str = f"{record.beneficiary_name}".strip() if record.beneficiary_name else ""
+        clean_id = (record.beneficiary_id or "").strip()
+        if clean_id.upper().startswith("ID"):
+            clean_id = clean_id[2:].strip()
+        id_str = f"ID {clean_id}" if clean_id else ""
+
+        # Beneficiary ID MUST come FIRST, followed by the Name!
+        if id_str and name_str:
+            parts.append(f"Beneficiary {id_str}, {name_str}")
         elif id_str:
             parts.append(f"Beneficiary {id_str}")
+        elif name_str:
+            parts.append(f"Beneficiary {name_str}")
 
         if record.visit_type:
             parts.append(f"{record.visit_type}")

@@ -26,6 +26,7 @@ export default function App() {
   const [danger, setDanger] = useState(null); // { title, msg }
   const [record, setRecord] = useState({});
   const [dbRecords, setDbRecords] = useState([]);
+  const [dbFollowUps, setDbFollowUps] = useState([]);
   const [replyTime, setReplyTime] = useState('–');
 
   const wsRef = useRef(null);
@@ -41,6 +42,7 @@ export default function App() {
   useEffect(() => {
     connectWS();
     loadDbRecords();
+    loadFollowUps();
 
     return () => {
       cleanup();
@@ -110,6 +112,18 @@ export default function App() {
     }
   };
 
+  const loadFollowUps = async () => {
+    try {
+      const res = await fetch(`${API_URL}/follow-ups`);
+      if (res.ok) {
+        const data = await res.json();
+        setDbFollowUps(data.follow_ups || []);
+      }
+    } catch (e) {
+      console.warn('Could not load follow-ups', e);
+    }
+  };
+
   const handleBackendEvent = (msg) => {
     const { event } = msg;
 
@@ -156,6 +170,7 @@ export default function App() {
       setHintText('Tap the mic for the next visit');
       setSayText('');
       loadDbRecords();
+      loadFollowUps();
     }
   };
 
@@ -337,12 +352,42 @@ export default function App() {
 
   // Follow up list computation
   const followUps = [];
+
+  // 1. In-progress visit follow-ups
+  const activeLabel = (record.beneficiary_name && record.beneficiary_id)
+    ? `${record.beneficiary_name} (ID: ${record.beneficiary_id})`
+    : (record.beneficiary_name || (record.beneficiary_id ? `ID: ${record.beneficiary_id}` : 'Current note'));
+
+  if (danger) {
+    followUps.push({
+      html: `Refer to PHC now: ${danger.msg}`,
+      urgent: true,
+      label: activeLabel
+    });
+  }
   if (record.next_visit_date) {
-    followUps.push(`Next visit: ${record.next_visit_date}`);
+    followUps.push({
+      html: `Next visit: ${record.next_visit_date}`,
+      active: true,
+      label: activeLabel
+    });
   }
   if (Array.isArray(record.vaccinations_due) && record.vaccinations_due.length > 0) {
-    followUps.push(`Vaccination due: ${record.vaccinations_due.join(', ')}`);
+    followUps.push({
+      html: `Vaccination due: ${record.vaccinations_due.join(', ')}`,
+      active: true,
+      label: activeLabel
+    });
   }
+
+  // 2. Saved database follow-ups (prebuilt seed records + previously saved visits)
+  dbFollowUps.forEach((f) => {
+    followUps.push({
+      html: `${f.details} • ${f.date}`,
+      urgent: f.urgent || f.type === 'URGENT_PHC_REFERRAL',
+      label: f.label || (f.beneficiary_id ? `ID: ${f.beneficiary_id}` : 'Beneficiary')
+    });
+  });
 
   const hasRecord = Object.keys(record).some((k) => record[k] && !['id', 'created_at', 'updated_at', 'status'].includes(k));
 
@@ -444,13 +489,30 @@ export default function App() {
       </section>
 
       <section className="card">
-        <h2>Follow-up list</h2>
+        <h2>
+          Follow-up list{' '}
+          {followUps.length > 0 && (
+            <span style={{ fontWeight: 400, textTransform: 'none', fontSize: '13px', color: 'var(--mute)' }}>
+              ({followUps.length})
+            </span>
+          )}
+        </h2>
         <ul id="fu">
           {followUps.length > 0 ? (
-            followUps.map((item, idx) => <li key={idx}>{item}</li>)
+            followUps.map((item, idx) => (
+              <li key={idx}>
+                {item.urgent && (
+                  <span className="badge" style={{ marginRight: '6px' }}>URGENT</span>
+                )}
+                {item.active && (
+                  <span style={{ display: 'inline-block', background: 'var(--amber-bg)', color: 'var(--amber)', fontSize: '11px', fontWeight: 700, padding: '2px 6px', borderRadius: '6px', marginRight: '6px' }}>ACTIVE</span>
+                )}
+                <b>{item.label}</b>: {item.html}
+              </li>
+            ))
           ) : (
             <li style={{ color: 'var(--mute)', listStyle: 'none', marginLeft: '-20px' }}>
-              Appears after the visit is recorded
+              No upcoming follow-ups scheduled
             </li>
           )}
         </ul>
