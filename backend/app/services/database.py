@@ -8,8 +8,100 @@ from typing import List, Optional
 from app.config import DB_PATH
 from app.models.visit_record import VisitRecord
 
-async def init_db():
-    """Initializes the SQLite database schema."""
+def get_seed_records() -> List[VisitRecord]:
+    """
+    Returns realistic baseline records demonstrating key aspects of PS1:
+    1. Routine ANC home visit (Kannada code-mixed) with immunisation & supplements.
+    2. High-risk maternal referral (MoHFW Module 6 danger signs: bleeding & severe headache).
+    3. Routine HBNC newborn care (Day 7 checkup, weight tracking, BCG/OPV verified).
+    4. Emergency newborn danger sign escalation (MoHFW Module 7: high fever & chest indrawing).
+    5. Hindi code-mixed ANC visit (local dialect: IFA goli, wazan, TT-1).
+    """
+    return [
+        VisitRecord(
+            id="seed-anc-01",
+            created_at="2026-11-13T09:15:00Z",
+            beneficiary_id="KA-BLR-4408",
+            beneficiary_name="Sunita Devi",
+            visit_type="ANC 3rd Checkup",
+            weight=54.5,
+            vaccinations_due=["TT-2 Injection completed"],
+            supplements_given=["IFA Tablets (100 days)"],
+            next_visit_date="2026-11-28",
+            danger_signs_flagged=[],
+            is_urgent_referral=False,
+            raw_transcript="Beneficiary Sunita Devi ID KA-BLR-4408, 3rd ANC checkup maadide. Weight 54.5 kilo ide. TT-2 injection aagide, IFA tablets kottiddini. Next visit date 28th November.",
+            language="kn-IN",
+            is_confirmed=True
+        ),
+        VisitRecord(
+            id="seed-referral-02",
+            created_at="2026-11-13T10:30:00Z",
+            beneficiary_id="KA-MYS-8821",
+            beneficiary_name="Priya Gowda",
+            visit_type="ANC 4th Checkup (High Risk)",
+            weight=58.0,
+            vaccinations_due=[],
+            supplements_given=["Calcium tablets"],
+            next_visit_date="Immediate Referral to PHC",
+            danger_signs_flagged=["Per vaginal bleeding", "Severe headache with blurred vision"],
+            is_urgent_referral=True,
+            raw_transcript="Beneficiary Priya Gowda ID KA-MYS-8821 checkup maadidaaga thumba thale novu mattu vaginal bleeding aagthide antha helidru. Weight 58 kilo. Thatha-kshana PHC ge refer maadbeku.",
+            language="kn-IN",
+            is_confirmed=True
+        ),
+        VisitRecord(
+            id="seed-hbnc-03",
+            created_at="2026-11-13T11:45:00Z",
+            beneficiary_id="KA-BLR-1042",
+            beneficiary_name="Baby of Lakshmi",
+            visit_type="HBNC Day 7 Visit",
+            weight=2.85,
+            vaccinations_due=["BCG", "OPV-0", "Hepatitis-B birth dose"],
+            supplements_given=["Vitamin K (at birth)"],
+            next_visit_date="2026-11-20 (HBNC Day 14)",
+            danger_signs_flagged=[],
+            is_urgent_referral=False,
+            raw_transcript="Lakshmi avara maguvina Day 7 HBNC visit aaythu. Maguvina weight 2.85 kilo ide. Feeding chennagi maadtha ide, naabhi clean aagide. Next checkup Day 14 ge.",
+            language="kn-IN",
+            is_confirmed=True
+        ),
+        VisitRecord(
+            id="seed-referral-04",
+            created_at="2026-11-13T13:20:00Z",
+            beneficiary_id="KA-MYS-9014",
+            beneficiary_name="Baby of Rekha",
+            visit_type="HBNC Day 14 (Emergency Referral)",
+            weight=3.1,
+            vaccinations_due=["Pentavalent-1 pending"],
+            supplements_given=[],
+            next_visit_date="Immediate Referral to District Hospital (FRU)",
+            danger_signs_flagged=["High fever (>38.5 C) in newborn", "Severe chest indrawing", "Refusal to feed / suck"],
+            is_urgent_referral=True,
+            raw_transcript="Rekha avara maguvige thumba jwara ide, haalu kudithilla mattu chest indrawing kantha ide. Emergency referral to hospital.",
+            language="kn-IN",
+            is_confirmed=True
+        ),
+        VisitRecord(
+            id="seed-anc-05",
+            created_at="2026-11-13T14:10:00Z",
+            beneficiary_id="UP-LKO-3312",
+            beneficiary_name="Kavita Devi",
+            visit_type="ANC 2nd Checkup",
+            weight=49.0,
+            vaccinations_due=["TT-1 Injection completed"],
+            supplements_given=["IFA goli (60 tablets)"],
+            next_visit_date="2026-12-10",
+            danger_signs_flagged=[],
+            is_urgent_referral=False,
+            raw_transcript="Kavita Devi ID UP-LKO-3312 ka 2nd ANC checkup hua. Wazan 49 kilo hai. TT-1 injection diya aur 60 IFA goli di. Next checkup 10th December ko hai.",
+            language="hi-IN",
+            is_confirmed=True
+        )
+    ]
+
+async def init_db(seed_samples: bool = True):
+    """Initializes the SQLite database schema and seeds realistic baseline records if empty."""
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("""
             CREATE TABLE IF NOT EXISTS visit_records (
@@ -34,6 +126,37 @@ async def init_db():
         except Exception:
             pass
         await db.commit()
+
+        if seed_samples:
+            async with db.execute("SELECT COUNT(*) FROM visit_records") as cursor:
+                row = await cursor.fetchone()
+                count = row[0] if row else 0
+            if count == 0:
+                for s in get_seed_records():
+                    await db.execute("""
+                        INSERT OR REPLACE INTO visit_records (
+                            id, created_at, beneficiary_id, beneficiary_name, visit_type, weight,
+                            vaccinations_due, supplements_given, next_visit_date,
+                            danger_signs_flagged, is_urgent_referral, raw_transcript,
+                            language, is_confirmed
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        s.id,
+                        s.created_at,
+                        s.beneficiary_id,
+                        s.beneficiary_name,
+                        s.visit_type,
+                        s.weight,
+                        json.dumps(s.vaccinations_due),
+                        json.dumps(s.supplements_given),
+                        s.next_visit_date,
+                        json.dumps(s.danger_signs_flagged),
+                        1 if s.is_urgent_referral else 0,
+                        s.raw_transcript,
+                        s.language,
+                        1 if s.is_confirmed else 0
+                    ))
+                await db.commit()
 
 async def save_record(record: VisitRecord) -> VisitRecord:
     """Inserts or updates a visit record."""

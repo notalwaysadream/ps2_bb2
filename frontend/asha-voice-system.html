@@ -445,7 +445,7 @@ async function loadDbRecords() {
       if (records.length === 0) {
         $("dbList").innerHTML = '<span style="color:var(--mute);font-size:13px">No records saved yet.</span>';
       } else {
-        $("dbList").innerHTML = records.slice(0, 5).map(r => `
+        $("dbList").innerHTML = records.slice(0, 10).map(r => `
           <div class="db-item">
             <div>
               <b>${esc(r.beneficiary_name || (r.beneficiary_id ? 'ID: ' + r.beneficiary_id : 'Unknown'))}</b>
