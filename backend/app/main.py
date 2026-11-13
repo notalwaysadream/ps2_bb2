@@ -6,6 +6,7 @@ for visit records persistence, health checks, and MoHFW guidelines.
 from contextlib import asynccontextmanager
 from typing import List, Optional
 from fastapi import FastAPI, WebSocket, HTTPException, Query
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 
@@ -43,6 +44,47 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+HTML_FILE = Path(__file__).resolve().parent.parent.parent / "frontend" / "asha-voice-system.html"
+
+@app.get("/")
+@app.get("/ui")
+@app.get("/app")
+async def serve_teammate_ui():
+    """Serves the standalone teammate single-file frontend directly."""
+    if HTML_FILE.exists():
+        return FileResponse(HTML_FILE)
+    raise HTTPException(status_code=404, detail="asha-voice-system.html not found")
+
+@app.get("/follow-ups")
+async def get_follow_up_list():
+    """Aggregates all scheduled follow-ups and due vaccinations from saved records."""
+    records = await get_records(limit=100)
+    follow_ups = []
+    for r in records:
+        if r.danger_signs_flagged:
+            for d in r.danger_signs_flagged:
+                follow_ups.append({
+                    "beneficiary_id": r.beneficiary_id,
+                    "type": "URGENT_PHC_REFERRAL",
+                    "details": f"Refer to PHC immediately: {d}",
+                    "date": "IMMEDIATE"
+                })
+        if r.vaccinations_due:
+            follow_ups.append({
+                "beneficiary_id": r.beneficiary_id,
+                "type": "VACCINATION_DUE",
+                "details": f"Vaccinations due: {', '.join(r.vaccinations_due)}",
+                "date": r.next_visit_date or "Pending"
+            })
+        elif r.next_visit_date:
+            follow_ups.append({
+                "beneficiary_id": r.beneficiary_id,
+                "type": "SCHEDULED_VISIT",
+                "details": f"Next home visit scheduled ({r.visit_type or 'General'})",
+                "date": r.next_visit_date
+            })
+    return {"total": len(follow_ups), "follow_ups": follow_ups}
 
 @app.get("/health")
 async def health_check():

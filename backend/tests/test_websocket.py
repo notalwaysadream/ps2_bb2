@@ -63,3 +63,52 @@ def test_websocket_text_flow_and_readback():
 def test_websocket_danger_sign_escalation():
     with ThreadPoolExecutor(max_workers=1) as pool:
         pool.submit(_run_danger_flow).result(timeout=10)
+
+def test_websocket_binary_audio_streaming():
+    def _run_audio_flow():
+        client = TestClient(app)
+        with client.websocket_connect("/ws/audio") as ws:
+            # Send set_language
+            ws.send_text(json.dumps({"event": "set_language", "language": "indic-auto"}))
+            m = json.loads(ws.receive_text())
+            assert m["event"] == "language_changed"
+
+            # Send binary PCM frames (silence)
+            pcm_chunk = b"\x00" * 1024
+            for _ in range(5):
+                ws.send_bytes(pcm_chunk)
+
+            # Send a note to verify pipeline is alive
+            ws.send_text(json.dumps({"event": "text_note", "text": "Weight 50 kilo"}))
+            resp = json.loads(ws.receive_text())
+            assert resp["event"] == "state_update"
+            assert resp["record"]["weight"] == 50.0
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        pool.submit(_run_audio_flow).result(timeout=10)
+
+def test_websocket_stop_recording_flow():
+    def _run_stop_rec_flow():
+        client = TestClient(app)
+        with client.websocket_connect("/ws/audio") as ws:
+            # Set language to Kannada
+            ws.send_text(json.dumps({"event": "set_language", "language": "kn-IN"}))
+            m1 = json.loads(ws.receive_text())
+            assert m1["event"] == "language_changed"
+
+            # Press mic button with dictated text
+            dictated = "Beneficiary ID 4408, name ಶಾಂತಲಾ, visit type ANC, weight 52 kilo, next visit 18th November."
+            ws.send_text(json.dumps({"event": "stop_recording", "text": dictated}))
+
+            s1 = json.loads(ws.receive_text())
+            assert s1["event"] == "state_update"
+            assert s1["record"]["beneficiary_id"] == "4408"
+            assert s1["record"]["weight"] == 52.0
+
+            s2 = json.loads(ws.receive_text())
+            assert s2["event"] == "agent_speech_start"
+            assert len(s2["text"]) > 0
+            assert "sariyagidiya" in s2["text"] or "4408" in s2["text"]
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        pool.submit(_run_stop_rec_flow).result(timeout=10)

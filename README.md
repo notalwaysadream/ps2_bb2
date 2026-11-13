@@ -17,16 +17,18 @@ Open your terminal in the project folder and run:
 ./run.sh
 ```
 This script will:
-1. Create a Python virtual environment and install backend requirements.
-2. Install frontend npm packages.
-3. Start both the backend (port 8000) and frontend (port 3000).
+1. Automatically free up ports 8000 and 3000 if they are still held from an earlier run.
+2. Set up the Python virtual environment and install backend requirements.
+3. Install frontend packages.
+4. Start the backend and frontend simultaneously.
+5. Automatically open the application at http://localhost:3000 in your default browser.
 
 #### On Windows:
 Double-click `run.bat`, or run it in Command Prompt:
 ```cmd
 run.bat
 ```
-This opens the backend and frontend in separate command windows.
+This automatically sets up dependencies, opens backend and frontend terminals, and launches http://localhost:3000 in your default browser.
 
 ---
 

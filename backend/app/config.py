@@ -22,14 +22,14 @@ GNANI_API_KEY = os.getenv("GNANI_API_KEY", "").strip()
 GNANI_STT_WS_URL = os.getenv("GNANI_STT_WS_URL", "wss://api.vachana.ai/stt/v3/stream")
 GNANI_TTS_WS_URL = os.getenv("GNANI_TTS_WS_URL", "wss://api.vachana.ai/api/v1/tts")
 
-# LLM Configuration (Groq Llama 3.3 / 3.1)
+# LLM Configuration (Groq Qwen / GPT-OSS)
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq").lower()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
-GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
 
-# Default voice settings
+# Default voice settings (Kannada + English default per requirements)
 DEFAULT_VOICE = os.getenv("DEFAULT_VOICE", "Shivani")
-DEFAULT_LANGUAGE = os.getenv("DEFAULT_LANGUAGE", "indic-auto")
+DEFAULT_LANGUAGE = os.getenv("DEFAULT_LANGUAGE", "kn-IN")
 
 # Database & Storage
 DATA_DIR = backend_dir / "app" / "data"

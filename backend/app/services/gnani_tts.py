@@ -57,6 +57,8 @@ class GnaniTTSClient:
 
         active_voice = voice or self.voice
         active_lang = language or self.language
+        if active_lang in ("indic-auto", "", None):
+            active_lang = "hi-IN"
 
         if is_simulation_mode() or not is_valid_key(self.api_key):
             logger.info(f"Gnani TTS in SIMULATION mode: Synthesizing '{text[:40]}...'")
@@ -77,7 +79,7 @@ class GnaniTTSClient:
                 "num_channels": 1,
                 "sample_width": 2,
                 "encoding": "linear_pcm",
-                "container": "wav"
+                "container": "raw"
             }
         }
 
@@ -88,7 +90,12 @@ class GnaniTTSClient:
                 await ws.send(json.dumps(payload))
 
                 while True:
-                    message = await ws.recv()
+                    try:
+                        message = await asyncio.wait_for(ws.recv(), timeout=10.0)
+                    except asyncio.TimeoutError:
+                        logger.warning("Timeout waiting for audio from Gnani TTS.")
+                        await on_audio_chunk(b"", True)
+                        break
                     if isinstance(message, str):
                         data = json.loads(message)
                         msg_type = data.get("type")

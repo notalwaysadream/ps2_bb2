@@ -17,7 +17,8 @@ class DangerSignAlert(BaseModel):
 class VisitRecord(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    beneficiary_id: Optional[str] = Field(None, description="Beneficiary ID or synthetic name")
+    beneficiary_id: Optional[str] = Field(None, description="Beneficiary ID or synthetic code")
+    beneficiary_name: Optional[str] = Field(None, description="Beneficiary patient/mother/child name")
     visit_type: Optional[str] = Field(None, description="ANC checkup, PNC, Newborn care, or Immunisation")
     weight: Optional[float] = Field(None, description="Weight in kg (e.g. 2.8, 52.5)")
     vaccinations_due: List[str] = Field(default_factory=list, description="Vaccinations administered or due (e.g. TT injection, BCG, OPV)")
@@ -26,8 +27,9 @@ class VisitRecord(BaseModel):
     danger_signs_flagged: List[str] = Field(default_factory=list, description="List of MoHFW danger signs detected")
     is_urgent_referral: bool = Field(False, description="True if maternal/newborn danger signs mandate immediate PHC referral")
     raw_transcript: str = Field("", description="Raw spoken notes transcribed by STT")
-    language: str = Field("hi-IN", description="Language of interaction (hi-IN, kn-IN, te-IN, ta-IN)")
+    language: str = Field("kn-IN", description="Language of interaction (kn-IN, hi-IN, te-IN, ta-IN)")
     is_confirmed: bool = Field(False, description="Whether the record was confirmed by voice")
+    ai_disclosure_given: bool = Field(False, description="Whether AI identity announcement has been made for this entry")
 
 class ExtractionResult(BaseModel):
     record: VisitRecord

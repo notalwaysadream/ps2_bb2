@@ -65,7 +65,7 @@ class GnaniSTTClient:
             "x-api-key-id": self.api_key,
             "language_code": self.language_code,
             "model": "prisma-v3.0",
-            "format": "pcm16"
+            "format": "transcribe"
         }
         if self.keyterms:
             headers["keyterms"] = json.dumps(self.keyterms)
@@ -74,12 +74,13 @@ class GnaniSTTClient:
     async def stream_audio_session(
         self,
         audio_queue: asyncio.Queue,
-        on_transcript: Callable[[str, bool], Coroutine]
+        on_transcript: Callable
     ):
         """
         Main loop:
         Pulls raw 16-bit PCM chunks from audio_queue and streams to Gnani Prisma STT.
-        Concurrently reads transcripts from Gnani and invokes on_transcript(text, is_final).
+        Concurrently reads transcripts from Gnani and invokes on_transcript(text, is_final, detected_lang).
+        Automatically reconnects if the remote socket drops during the session.
         """
         self._is_running = True
 
@@ -88,60 +89,79 @@ class GnaniSTTClient:
             await self._run_simulation_loop(audio_queue, on_transcript)
             return
 
-        headers = self.get_connection_headers()
-        connect_kwargs = get_ws_connect_kwargs(headers)
-        logger.info(f"Connecting to Gnani Prisma STT at {self.ws_url} with language={self.language_code}")
-
+        consecutive_failures = 0
         try:
-            async with websockets.connect(self.ws_url, **connect_kwargs) as ws:
-                logger.info("Successfully connected to Gnani Prisma v3.0 STT WebSocket.")
+            while self._is_running:
+                headers = self.get_connection_headers()
+                connect_kwargs = get_ws_connect_kwargs(headers)
+                logger.info(f"Connecting to Gnani Prisma STT at {self.ws_url} with language={self.language_code}")
 
-                async def sender():
-                    """Sends incoming PCM audio chunks to Gnani."""
-                    try:
-                        while self._is_running:
-                            chunk = await audio_queue.get()
-                            if chunk is None: # Sentinel to close
-                                break
-                            if isinstance(chunk, bytes) and len(chunk) > 0:
-                                await ws.send(chunk)
-                    except asyncio.CancelledError:
-                        pass
-                    except Exception as e:
-                        logger.error(f"Error sending audio to Gnani STT: {e}")
+                try:
+                    async with websockets.connect(self.ws_url, **connect_kwargs) as ws:
+                        logger.info("Successfully connected to Gnani Prisma v3.0 STT WebSocket.")
+                        consecutive_failures = 0
 
-                async def receiver():
-                    """Receives transcript JSON from Gnani STT."""
-                    try:
-                        while self._is_running:
-                            message = await ws.recv()
-                            if isinstance(message, str):
-                                data = json.loads(message)
-                                text = data.get("text", "").strip()
-                                is_final = data.get("is_final", False)
-                                if text:
-                                    logger.info(f"STT Transcript: '{text}' (is_final={is_final})")
-                                    await on_transcript(text, is_final)
-                    except asyncio.CancelledError:
-                        pass
-                    except websockets.exceptions.ConnectionClosed:
-                        logger.info("Gnani STT WebSocket connection closed by remote.")
-                    except Exception as e:
-                        logger.error(f"Error receiving from Gnani STT: {e}")
+                        async def sender():
+                            """Sends incoming PCM audio chunks to Gnani."""
+                            try:
+                                while self._is_running:
+                                    chunk = await audio_queue.get()
+                                    if chunk is None:  # Sentinel to close
+                                        break
+                                    if isinstance(chunk, bytes) and len(chunk) > 0:
+                                        await ws.send(chunk)
+                            except asyncio.CancelledError:
+                                pass
+                            except Exception as e:
+                                logger.error(f"Error sending audio to Gnani STT: {e}")
 
-                sender_task = asyncio.create_task(sender())
-                receiver_task = asyncio.create_task(receiver())
+                        async def receiver():
+                            """Receives transcript JSON from Gnani STT."""
+                            try:
+                                while self._is_running:
+                                    message = await ws.recv()
+                                    if isinstance(message, str):
+                                        data = json.loads(message)
+                                        msg_type = data.get("type")
+                                        if msg_type == "error":
+                                            logger.error(f"Gnani STT returned error: {data.get('message')}")
+                                        text = data.get("text", "").strip()
+                                        is_final = data.get("is_final", False)
+                                        detected_lang = data.get("detected_language_code")
+                                        if text:
+                                            logger.info(f"STT Transcript: '{text}' (is_final={is_final}, detected_lang={detected_lang})")
+                                            try:
+                                                # Accept on_transcript with 3 or 2 arguments
+                                                await on_transcript(text, is_final, detected_lang)
+                                            except TypeError:
+                                                await on_transcript(text, is_final)
+                            except asyncio.CancelledError:
+                                pass
+                            except websockets.exceptions.ConnectionClosed as cc:
+                                logger.info(f"Gnani STT WebSocket connection closed by remote: {cc}")
+                            except Exception as e:
+                                logger.error(f"Error receiving from Gnani STT: {e}")
 
-                done, pending = await asyncio.wait(
-                    [sender_task, receiver_task],
-                    return_when=asyncio.FIRST_COMPLETED
-                )
-                for task in pending:
-                    task.cancel()
+                        sender_task = asyncio.create_task(sender())
+                        receiver_task = asyncio.create_task(receiver())
 
-        except Exception as e:
-            logger.error(f"Failed to connect to Gnani STT WebSocket: {e}. Falling back to simulation.")
-            await self._run_simulation_loop(audio_queue, on_transcript)
+                        done, pending = await asyncio.wait(
+                            [sender_task, receiver_task],
+                            return_when=asyncio.FIRST_COMPLETED
+                        )
+                        for task in pending:
+                            task.cancel()
+
+                except asyncio.CancelledError:
+                    break
+                except Exception as e:
+                    consecutive_failures += 1
+                    logger.error(f"Gnani STT WebSocket error (failure {consecutive_failures}): {e}")
+                    if consecutive_failures >= 3:
+                        logger.warning("Multiple Gnani STT connection failures; falling back to simulation loop.")
+                        await self._run_simulation_loop(audio_queue, on_transcript)
+                        break
+                    await asyncio.sleep(1.0)
         finally:
             self._is_running = False
 

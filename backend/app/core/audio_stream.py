@@ -11,7 +11,7 @@ class AudioStreamHandler:
     def __init__(
         self,
         sample_rate: int = 16000,
-        energy_threshold: float = 500.0,
+        energy_threshold: float = 1200.0,
         silence_timeout_sec: float = 1.3
     ):
         self.sample_rate = sample_rate

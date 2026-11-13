@@ -3,258 +3,667 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ASHA Voice Register</title>
+<title>ASHA Voice Field Register</title>
 <link href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#EEF3F0;--card:#fff;--ink:#12302A;--mute:#5C746D;--line:#D3DFD9;--green:#0E6B50;--green-d:#0A4D3A;--amber:#B26A00;--amber-bg:#FFF3DC;--red:#C0262D;--red-bg:#FDE9EA}
-@media (prefers-color-scheme:dark){:root{--bg:#0E1B17;--card:#16282F;--card:#162520;--ink:#E6F1EC;--mute:#97B0A7;--line:#28403A;--green:#3FBF93;--green-d:#2A9A74;--amber:#F0B45A;--amber-bg:#3A2D12;--red:#FF8085;--red-bg:#3F1A1D}}
-*{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Hind','Noto Sans Devanagari','Noto Sans',system-ui,sans-serif;font-size:17px;line-height:1.45}
-body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-main{max-width:520px;margin:0 auto;padding:14px 14px 40px;display:flex;flex-direction:column;gap:14px}
-header{display:flex;align-items:center;justify-content:space-between;gap:10px}
-h1{font-size:20px;margin:0;font-weight:700}
-select,button{font:inherit;color:inherit}
-select{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;min-height:44px}
-.card{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px}
-h2{font-size:16px;margin:0 0 8px;font-weight:600;color:var(--mute)}
-#danger{display:none;background:var(--red-bg);border:2px solid var(--red);color:var(--red);border-radius:16px;padding:14px;font-weight:600}
-#danger.on{display:block}
-#danger b{display:block;font-size:20px;margin-bottom:4px}
-.stage{display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 0 2px}
-.mic{position:relative;width:132px;height:132px;border-radius:50%;border:0;background:var(--green);color:#fff;cursor:pointer;display:grid;place-items:center;box-shadow:0 0 0 calc(var(--lvl,0)*34px) rgba(14,107,80,.22);transition:box-shadow .08s,background .2s}
-.mic:focus-visible{outline:4px solid var(--amber);outline-offset:4px}
-.mic.live{background:var(--red)}
-.mic svg{width:54px;height:54px}
-#state{font-weight:600;font-size:18px;text-align:center}
-#hint{color:var(--mute);font-size:15px;text-align:center;margin-top:-6px}
-#tx{min-height:3.2em;white-space:pre-wrap}
-#tx i{color:var(--mute)}
-.rows{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;margin:0}
-.rows dt{color:var(--mute);padding:8px 0;border-bottom:1px solid var(--line)}
-.rows dd{margin:0;padding:8px 0;border-bottom:1px solid var(--line);font-weight:600;text-align:right;word-break:break-word}
-.rows dd.empty{color:var(--mute);font-weight:400}
-.rows dd.flash{animation:fl 1.2s}
-@keyframes fl{from{background:var(--amber-bg)}to{background:transparent}}
-.say{background:var(--amber-bg);border-radius:12px;padding:10px 12px;margin-top:12px;display:none}
-.say.on{display:block}
-.row{display:flex;gap:10px;margin-top:12px}
-.btn{flex:1;min-height:52px;border-radius:12px;border:2px solid var(--green);background:transparent;font-weight:700;cursor:pointer;color:var(--green)}
-.btn.pri{background:var(--green);color:#fff}
-.btn:disabled{opacity:.4;cursor:default}
-.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
-ul{margin:0;padding-left:20px}li{padding:3px 0}
-.badge{display:inline-block;background:var(--red);color:#fff;border-radius:8px;padding:2px 8px;font-size:14px;margin-left:6px}
-footer{display:flex;justify-content:space-between;gap:8px;color:var(--mute);font-size:14px;flex-wrap:wrap}
-footer label{display:flex;gap:6px;align-items:center}
-#lat{font-variant-numeric:tabular-nums}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+:root {
+  --bg: #EEF3F0;
+  --card: #ffffff;
+  --ink: #12302A;
+  --mute: #5C746D;
+  --line: #D3DFD9;
+  --green: #0E6B50;
+  --green-d: #0A4D3A;
+  --amber: #B26A00;
+  --amber-bg: #FFF3DC;
+  --red: #C0262D;
+  --red-bg: #FDE9EA;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0E1B17;
+    --card: #162520;
+    --ink: #E6F1EC;
+    --mute: #97B0A7;
+    --line: #28403A;
+    --green: #3FBF93;
+    --green-d: #2A9A74;
+    --amber: #F0B45A;
+    --amber-bg: #3A2D12;
+    --red: #FF8085;
+    --red-bg: #3F1A1D;
+  }
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Hind', 'Noto Sans Devanagari', 'Noto Sans', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+}
+body {
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+}
+main {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 16px 14px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.brand {
+  display: flex;
+  flex-direction: column;
+}
+h1 {
+  font-size: 20px;
+  margin: 0;
+  font-weight: 700;
+  color: var(--ink);
+}
+.subtitle {
+  font-size: 12px;
+  color: var(--mute);
+  margin-top: -2px;
+}
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+select, button, input {
+  font: inherit;
+  color: inherit;
+}
+select {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 40px;
+  cursor: pointer;
+}
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mute);
+}
+.dot.on { background: #10B981; }
+.dot.err { background: var(--red); }
+
+.card {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+}
+h2 {
+  font-size: 15px;
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+#danger {
+  display: none;
+  background: var(--red-bg);
+  border: 2px solid var(--red);
+  color: var(--red);
+  border-radius: 16px;
+  padding: 14px;
+  font-weight: 600;
+}
+#danger.on { display: block; animation: fl 1s; }
+#danger b {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0 6px;
+}
+.mic {
+  position: relative;
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--green);
+  color: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 0 calc(var(--lvl,0)*34px) rgba(14,107,80,.25);
+  transition: box-shadow .08s, background .2s, transform .1s;
+}
+.mic:active { transform: scale(0.96); }
+.mic:focus-visible { outline: 4px solid var(--amber); outline-offset: 4px; }
+.mic.live { background: var(--red); box-shadow: 0 0 0 calc(var(--lvl,0)*34px) rgba(192,38,45,.28); }
+.mic svg { width: 50px; height: 50px; }
+#state {
+  font-weight: 600;
+  font-size: 17px;
+  text-align: center;
+}
+#hint {
+  color: var(--mute);
+  font-size: 14px;
+  text-align: center;
+  margin-top: -6px;
+}
+#tx {
+  min-height: 2.8em;
+  white-space: pre-wrap;
+  font-size: 15px;
+}
+#tx i { color: var(--mute); }
+.rows {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 14px;
+  margin: 0;
+}
+.rows dt {
+  color: var(--mute);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.rows dd {
+  margin: 0;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+  font-size: 15px;
+}
+.rows dd.empty { color: var(--mute); font-weight: 400; }
+.rows dd.flash { animation: fl 1.2s; }
+@keyframes fl { from { background: var(--amber-bg); } to { background: transparent; } }
+
+.say {
+  background: var(--amber-bg);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-top: 12px;
+  display: none;
+  font-size: 15px;
+}
+.say.on { display: block; }
+.say-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 2px;
+  display: block;
+}
+.row { display: flex; gap: 8px; margin-top: 12px; }
+.btn {
+  flex: 1;
+  min-height: 48px;
+  border-radius: 12px;
+  border: 2px solid var(--green);
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--green);
+  font-size: 15px;
+}
+.btn.pri { background: var(--green); color: #fff; }
+.btn:disabled { opacity: .4; cursor: default; }
+.btn:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+ul { margin: 0; padding-left: 20px; }
+li { padding: 4px 0; font-size: 14px; }
+.badge {
+  display: inline-block;
+  background: var(--red);
+  color: #fff;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-left: 6px;
+}
+.db-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--mute);
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+#lat { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
 <main>
   <header>
-    <h1>Visit register</h1>
-    <select id="lang" aria-label="Language">
-      <option value="hi-IN">हिन्दी</option><option value="kn-IN">ಕನ್ನಡ</option><option value="ta-IN">தமிழ்</option>
-      <option value="te-IN">తెలుగు</option><option value="mr-IN">मराठी</option><option value="bn-IN">বাংলা</option>
-      <option value="gu-IN">ગુજરાતી</option><option value="ml-IN">മലയാളം</option><option value="pa-IN">ਪੰਜਾਬੀ</option>
-      <option value="or-IN">ଓଡ଼ିଆ</option><option value="en-IN">English</option>
-    </select>
+    <div class="brand">
+      <h1>Visit register</h1>
+      <span class="subtitle">Gnani Prisma STT + Timbre TTS</span>
+    </div>
+    <div class="header-controls">
+      <select id="lang" aria-label="Language">
+        <option value="kn-IN" selected>ಕನ್ನಡ (Kannada + English)</option>
+        <option value="indic-auto">Auto (Kannada/Indic)</option>
+        <option value="hi-IN">हिन्दी (Hindi + English)</option>
+        <option value="te-IN">తెలుగు (Telugu + English)</option>
+        <option value="ta-IN">தமிழ் (Tamil + English)</option>
+        <option value="en-IN">English</option>
+      </select>
+      <div class="status-pill" id="statusPill">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusTxt">Connecting</span>
+      </div>
+    </div>
   </header>
 
-  <div id="danger" role="alert"><b id="dgTitle">Refer to PHC now</b><span id="dgMsg"></span></div>
+  <div id="danger" role="alert">
+    <b id="dgTitle">Refer to PHC now</b>
+    <span id="dgMsg"></span>
+  </div>
 
   <section class="card stage" aria-live="polite">
     <button class="mic" id="mic" aria-label="Start or stop speaking">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <rect x="9" y="3" width="6" height="12" rx="3" fill="currentColor"/>
+        <path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>
+      </svg>
     </button>
     <div id="state">Tap and tell me about the visit</div>
     <div id="hint">Speak in your language. You can mix English words.</div>
   </section>
 
-  <section class="card"><h2>What I heard</h2><div id="tx"><i>Nothing yet</i></div></section>
+  <section class="card">
+    <h2>What I heard</h2>
+    <div id="tx"><i>Nothing yet</i></div>
+  </section>
 
   <section class="card">
     <h2>Visit record <span id="flagBadge"></span></h2>
     <dl class="rows" id="form"></dl>
-    <div class="say" id="say"></div>
+    <div class="say" id="say">
+      <span class="say-label">Agent read-back</span>
+      <span id="sayText"></span>
+    </div>
     <div class="row">
       <button class="btn" id="fix">Say a correction</button>
       <button class="btn pri" id="save" disabled>Confirm and save</button>
     </div>
   </section>
 
-  <section class="card"><h2>Follow-up list</h2><ul id="fu"><li style="color:var(--mute);list-style:none;margin-left:-20px">Appears after the visit is recorded</li></ul></section>
+  <section class="card">
+    <h2>Follow-up list</h2>
+    <ul id="fu"><li style="color:var(--mute);list-style:none;margin-left:-20px">Appears after the visit is recorded</li></ul>
+  </section>
+
+  <!-- Saved Database Records -->
+  <section class="card">
+    <h2>Saved in database (<span id="dbCount">0</span>)</h2>
+    <div id="dbList"><span style="color:var(--mute);font-size:13px">No records saved yet.</span></div>
+  </section>
 
   <footer>
-    <span id="lat">Reply time: –</span>
-    <label><input type="checkbox" id="mock"> Demo mode (no server)</label>
+    <span id="lat">Reply time: &ndash;</span>
+    <span style="font-size:12px;color:var(--mute)">MoHFW ASHA Register &bull; Online</span>
   </footer>
 </main>
 
 <script>
 /* ===== CONFIG ===== */
+const defaultPort = (location.hostname === "localhost" || location.hostname === "127.0.0.1") ? (location.port || "8000") : (location.port || "");
+const portSuffix = defaultPort ? ":" + defaultPort : "";
 const CONFIG = {
-  WS_URL: "ws://localhost:8000/ws/audio",
-  AGENT_AUDIO_RATE: 24000, // sample rate of the voice audio from the backend. If the voice sounds too fast or slow, change this (try 16000, 22050, 24000).
+  WS_URL: (location.protocol === "https:" ? "wss://" : "ws://") + (location.hostname || "localhost") + portSuffix + "/ws/audio",
+  API_URL: (location.protocol === "https:" ? "https://" : "http://") + (location.hostname || "localhost") + portSuffix,
+  AGENT_AUDIO_RATE: 16000 // Matched to Gnani Timbre 16kHz linear PCM
 };
-/* Backend events handled (from orchestrator.py):
-   transcript{text,is_final}  state_update{record,status}  danger_alert{alert,signs}
-   agent_speech_start{text}  agent_speech_end  barge_in_detected  record_saved{record}  language_changed
-   Sent to backend: set_language, barge_in, confirm_record, clear_record. Binary = 16 kHz PCM mic audio. */
-const $=id=>document.getElementById(id);
-const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const KNOWN=[
-  ["Beneficiary ID",["beneficiary_id","beneficiary_code","mcts_id"]],
-  ["Name",["beneficiary_name","name","patient_name"]],
-  ["Visit type",["visit_type"]],
-  ["Weight (kg)",["weight_kg","weight"]],
-  ["Vaccinations due",["vaccinations_due","vaccines_due","vaccinations","vaccines"]],
-  ["Next visit",["next_visit_date","next_visit"]]];
-const HIDE=["id","language","is_confirmed","created_at","updated_at","timestamp","transcript","raw_transcript","danger_flag","danger_flags","danger_signs","flagged","is_flagged","danger_alerts"];
-let ws,ctx,stream,proc,live=false,playing=[],playT=0,lastVoice=0,waitingAudio=false,prev={},dangers=[],lastRecord={},timers=[];
 
-function val(v){
-  if(v==null||v==="")return "";
-  if(Array.isArray(v))return v.map(val).filter(Boolean).join(", ");
-  if(typeof v==="object")return Object.values(v).map(val).filter(Boolean).join(" ");
-  return String(v)}
-function label(k){k=k.replace(/_/g," ");return k[0].toUpperCase()+k.slice(1)}
-function signLabel(s){return typeof s==="string"?s:(s&&(s.name||s.sign||s.label||s.title||s.description||s.id))||""}
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-function renderRecord(r){
-  lastRecord=r;const used=new Set(),rows=[];
-  for(const [l,keys] of KNOWN){
-    const k=keys.find(x=>x in r);keys.forEach(x=>used.add(x));
-    rows.push([l,k?val(r[k]):"",k&&val(prev[k])!==val(r[k])])}
-  for(const k of Object.keys(r)){
-    if(used.has(k)||HIDE.includes(k))continue;
-    const v=val(r[k]);if(v)rows.push([label(k),v,val(prev[k])!==v])}
-  $("form").innerHTML=rows.map(([l,v,ch])=>
-    `<dt>${esc(l)}</dt><dd class="${v?"":"empty"} ${v&&ch?"flash":""}">${esc(v||"Not heard yet")}</dd>`).join("");
-  $("save").disabled=!rows.slice(0,6).some(x=>x[1]);
-  prev={...r};
-  if(["danger_flag","flagged","is_flagged"].some(k=>r[k]))$("flagBadge").innerHTML='<span class="badge">Flagged</span>';
+const KNOWN = [
+  ["Beneficiary ID", ["beneficiary_id", "beneficiary_code", "mcts_id"]],
+  ["Name", ["beneficiary_name", "name", "patient_name"]],
+  ["Visit type", ["visit_type"]],
+  ["Weight (kg)", ["weight", "weight_kg"]],
+  ["Vaccinations due", ["vaccinations_due", "vaccines_due", "vaccinations"]],
+  ["Supplements", ["supplements_given", "supplements"]],
+  ["Next visit", ["next_visit_date", "next_visit"]]
+];
+const HIDE = ["id", "language", "is_confirmed", "created_at", "updated_at", "timestamp", "transcript", "raw_transcript", "danger_flag", "danger_flags", "danger_signs", "flagged", "is_flagged", "danger_alerts"];
+
+let ws, ctx, stream, proc, live = false, playing = [], playT = 0, lastVoice = 0, waitingAudio = false, prev = {}, dangers = [], lastRecord = {}, timers = [];
+
+function val(v) {
+  if (v == null || v === "") return "";
+  if (Array.isArray(v)) return v.map(val).filter(Boolean).join(", ");
+  if (typeof v === "object") return Object.values(v).map(val).filter(Boolean).join(" ");
+  return String(v);
+}
+function label(k) { k = k.replace(/_/g, " "); return k[0].toUpperCase() + k.slice(1); }
+function signLabel(s) { return typeof s === "string" ? s : (s && (s.name || s.sign || s.label || s.title || s.description || s.id)) || ""; }
+
+function renderRecord(r) {
+  lastRecord = r;
+  const used = new Set(), rows = [];
+  for (const [l, keys] of KNOWN) {
+    const k = keys.find(x => x in r);
+    keys.forEach(x => used.add(x));
+    rows.push([l, k ? val(r[k]) : "", k && val(prev[k]) !== val(r[k])]);
+  }
+  for (const k of Object.keys(r)) {
+    if (used.has(k) || HIDE.includes(k)) continue;
+    const v = val(r[k]);
+    if (v) rows.push([label(k), v, val(prev[k]) !== v]);
+  }
+  $("form").innerHTML = rows.map(([l, v, ch]) =>
+    `<dt>${esc(l)}</dt><dd class="${v ? "" : "empty"} ${v && ch ? "flash" : ""}">${esc(v || "Not heard yet")}</dd>`
+  ).join("");
+  $("save").disabled = !rows.slice(0, 5).some(x => x[1]);
+  prev = { ...r };
+  if (["danger_flag", "flagged", "is_flagged", "is_urgent_referral"].some(k => r[k])) {
+    $("flagBadge").innerHTML = '<span class="badge">Flagged</span>';
+  }
   renderFollowups();
 }
-/* Follow-up list is built here from the record and the danger list only. No advice is added. */
-function renderFollowups(){
-  const r=lastRecord,items=[];
-  dangers.forEach(d=>items.push("Refer to PHC now: "+d));
-  const get=keys=>{const k=keys.find(x=>x in r);return k?val(r[k]):""};
-  const vac=get(KNOWN[4][1]),nxt=get(KNOWN[5][1]);
-  if(vac)items.push("Vaccinations due: "+vac);
-  if(nxt)items.push("Next visit: "+nxt);
-  $("fu").innerHTML=items.length?items.map(i=>`<li>${esc(i)}</li>`).join(""):
-    '<li style="color:var(--mute);list-style:none;margin-left:-20px">Appears after the visit is recorded</li>';
+
+function renderFollowups() {
+  const r = lastRecord, items = [];
+  dangers.forEach(d => items.push("Refer to PHC now: " + d));
+  const get = keys => { const k = keys.find(x => x in r); return k ? val(r[k]) : ""; };
+  const vac = get(KNOWN[4][1]), nxt = get(KNOWN[6][1]);
+  if (vac) items.push("Vaccinations due: " + vac);
+  if (nxt) items.push("Next visit: " + nxt);
+  $("fu").innerHTML = items.length
+    ? items.map(i => `<li>${esc(i)}</li>`).join("")
+    : '<li style="color:var(--mute);list-style:none;margin-left:-20px">Appears after the visit is recorded</li>';
 }
-function setState(t,h){$("state").textContent=t;if(h!==undefined)$("hint").textContent=h}
-function showDanger(m){
-  const names=(m.signs||[]).map(signLabel).filter(Boolean);
-  names.forEach(n=>{if(!dangers.includes(n))dangers.push(n)});
+
+function setState(t, h) {
+  $("state").textContent = t;
+  if (h !== undefined) $("hint").textContent = h;
+}
+
+function showDanger(m) {
+  const names = (m.signs || []).map(signLabel).filter(Boolean);
+  names.forEach(n => { if (!dangers.includes(n)) dangers.push(n); });
   $("danger").classList.add("on");
-  $("dgMsg").textContent=(m.alert||"Refer to the PHC now.")+(names.length?" ("+names.join(", ")+")":"");
-  $("flagBadge").innerHTML='<span class="badge">Flagged</span>';
-  if(navigator.vibrate)navigator.vibrate([300,150,300]);
+  $("dgMsg").textContent = (m.alert || "Refer to the PHC now.") + (names.length ? " (" + names.join(", ") + ")" : "");
+  $("flagBadge").innerHTML = '<span class="badge">Flagged</span>';
+  if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
   renderFollowups();
 }
 
-/* ---- backend events ---- */
-function handle(m){
-  switch(m.event){
-    case "transcript":$("tx").textContent=m.text;$("tx").style.opacity=m.is_final?1:.7;break;
-    case "state_update":
-      if(m.status==="RESET"){dangers=[];prev={};$("danger").classList.remove("on");$("flagBadge").innerHTML="";$("say").classList.remove("on")}
-      renderRecord(m.record||{});break;
-    case "danger_alert":showDanger(m);break;
-    case "agent_speech_start":
-      $("say").textContent=m.text||"";$("say").classList.toggle("on",!!m.text);
-      setState("Agent is speaking","Start talking to interrupt");
-      if($("mock").checked&&window.speechSynthesis&&m.text){const u=new SpeechSynthesisUtterance(m.text);u.lang=$("lang").value;speechSynthesis.speak(u)}
-      break;
-    case "agent_speech_end":if(live)setState("Listening…","Say yes to save, or tell me what to fix.");break;
-    case "barge_in_detected":stopAgent();if(live)setState("Listening…","Go ahead, I stopped talking");break;
-    case "record_saved":setState("Saved","Tap the mic for the next visit");$("say").classList.remove("on");break;
+/* Load saved SQLite records */
+async function loadDbRecords() {
+  try {
+    const res = await fetch(CONFIG.API_URL + "/records");
+    if (res.ok) {
+      const records = await res.json();
+      $("dbCount").textContent = records.length;
+      if (records.length === 0) {
+        $("dbList").innerHTML = '<span style="color:var(--mute);font-size:13px">No records saved yet.</span>';
+      } else {
+        $("dbList").innerHTML = records.slice(0, 5).map(r => `
+          <div class="db-item">
+            <div>
+              <b>${esc(r.beneficiary_name || (r.beneficiary_id ? 'ID: ' + r.beneficiary_id : 'Unknown'))}</b>
+              ${r.beneficiary_name && r.beneficiary_id ? `<span style="color:var(--mute);font-size:12px"> (ID: ${esc(r.beneficiary_id)})</span>` : ''}
+              <span style="color:var(--mute);margin-left:6px">(${esc(r.visit_type || 'Visit')}) &bull; ${r.weight ? esc(r.weight) + 'kg' : ''}</span>
+            </div>
+            <div>
+              ${r.is_urgent_referral ? '<span class="badge">Referral</span>' : '<span style="color:var(--green);font-weight:600">&check; Saved</span>'}
+            </div>
+          </div>
+        `).join("");
+      }
+    }
+  } catch (e) {
+    console.warn("Could not load db records", e);
   }
 }
 
-/* ---- agent audio playback ---- */
-function playPCM(buf){
-  if(!ctx)return;
-  if(waitingAudio){waitingAudio=false;$("lat").textContent="Reply time: "+Math.round(performance.now()-lastVoice)+" ms"}
-  const n=buf.byteLength>>1;if(!n)return;
-  const i16=new Int16Array(buf,0,n),f=new Float32Array(n);
-  for(let i=0;i<n;i++)f[i]=i16[i]/32768;
-  const ab=ctx.createBuffer(1,n,CONFIG.AGENT_AUDIO_RATE);ab.copyToChannel(f,0);
-  const s=ctx.createBufferSource();s.buffer=ab;s.connect(ctx.destination);
-  playT=Math.max(playT,ctx.currentTime+.02);s.start(playT);playT+=ab.duration;
-  playing.push(s);s.onended=()=>{playing=playing.filter(x=>x!==s)};
+/* Backend events */
+function handle(m) {
+  switch (m.event) {
+    case "transcript":
+      $("tx").textContent = m.text;
+      $("tx").style.opacity = m.is_final ? 1 : .7;
+      break;
+    case "state_update":
+      if (m.status === "RESET") {
+        dangers = []; prev = {};
+        $("danger").classList.remove("on");
+        $("flagBadge").innerHTML = "";
+        $("say").classList.remove("on");
+      }
+      renderRecord(m.record || {});
+      if (!live) {
+        setState("Checking with you…", "Reviewing recorded fields and reading back…");
+      }
+      break;
+    case "danger_alert":
+      showDanger(m);
+      break;
+    case "agent_speech_start":
+      stopAgent();
+      $("sayText").textContent = m.text || "";
+      $("say").classList.toggle("on", !!m.text);
+      setState("Agent is speaking", "Start talking to interrupt, or tap Confirm to save");
+      break;
+    case "agent_speech_end":
+      if (live) setState("Listening…", "Say yes to save, or tell me what to fix.");
+      else setState("Tap Confirm to save", "Say yes or tap Confirm and save to store record");
+      break;
+    case "no_speech_detected":
+      setState("Tap and tell me about the visit", "No speech detected. Tap mic and speak.");
+      break;
+    case "barge_in_detected":
+      stopAgent();
+      if (live) setState("Listening…", "Go ahead, I stopped talking");
+      break;
+    case "record_saved":
+      setState("Saved to database", "Tap the mic for the next visit");
+      $("say").classList.remove("on");
+      loadDbRecords();
+      break;
+    case "language_changed":
+      console.log("Language changed to", m.language);
+      break;
+  }
 }
-function stopAgent(){playing.forEach(s=>{try{s.stop()}catch(e){}});playing=[];playT=0;if(window.speechSynthesis)speechSynthesis.cancel()}
-const send=o=>{if(ws&&ws.readyState===1)ws.send(JSON.stringify(o))};
 
-/* ---- mic capture (16 kHz PCM) ---- */
-async function startMic(){
-  stream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
-  ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();await ctx.resume();
-  const src=ctx.createMediaStreamSource(stream);proc=ctx.createScriptProcessor(2048,1,1);
-  const ratio=ctx.sampleRate/16000;let speaking=false,quiet=0;
-  proc.onaudioprocess=e=>{
-    const x=e.inputBuffer.getChannelData(0);let sum=0;
-    for(let i=0;i<x.length;i++)sum+=x[i]*x[i];
-    const rms=Math.sqrt(sum/x.length);
-    $("mic").style.setProperty("--lvl",Math.min(1,rms*8));
-    if(rms>0.03){
-      if(playing.length){stopAgent();send({event:"barge_in"})}
-      speaking=true;quiet=0;waitingAudio=false;
-    }else if(speaking&&++quiet>6){speaking=false;lastVoice=performance.now();waitingAudio=true}
-    if(ws&&ws.readyState===1){
-      const n=Math.floor(x.length/ratio),o=new Int16Array(n);
-      for(let i=0;i<n;i++){const v=Math.max(-1,Math.min(1,x[Math.floor(i*ratio)]));o[i]=v*32767}
+/* Agent audio playback */
+function playPCM(buf) {
+  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+  if (ctx.state === "suspended") ctx.resume();
+  if (waitingAudio) {
+    waitingAudio = false;
+    $("lat").textContent = "Reply time: " + Math.round(performance.now() - lastVoice) + " ms";
+  }
+  const n = buf.byteLength >> 1;
+  if (!n) return;
+  const i16 = new Int16Array(buf, 0, n), f = new Float32Array(n);
+  for (let i = 0; i < n; i++) f[i] = i16[i] / 32768;
+  const ab = ctx.createBuffer(1, n, CONFIG.AGENT_AUDIO_RATE);
+  ab.copyToChannel(f, 0);
+  const s = ctx.createBufferSource();
+  s.buffer = ab;
+  s.connect(ctx.destination);
+  playT = Math.max(playT, ctx.currentTime + .02);
+  s.start(playT);
+  playT += ab.duration;
+  playing.push(s);
+  s.onended = () => { playing = playing.filter(x => x !== s); };
+}
+
+function stopAgent() {
+  playing.forEach(s => { try { s.stop(); } catch (e) {} });
+  playing = [];
+  playT = 0;
+  if (window.speechSynthesis) speechSynthesis.cancel();
+}
+
+const send = o => {
+  if (ws && ws.readyState === 1) ws.send(JSON.stringify(o));
+  else if (!ws || ws.readyState > 1) {
+    openWS(() => ws.send(JSON.stringify(o)));
+  }
+};
+
+/* Mic capture (16 kHz linear PCM) */
+async function startMic() {
+  stream = await navigator.mediaDevices.getUserMedia({
+    audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+  });
+  ctx = ctx || new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+  await ctx.resume();
+  const src = ctx.createMediaStreamSource(stream);
+  proc = ctx.createScriptProcessor(2048, 1, 1);
+  const ratio = ctx.sampleRate / 16000;
+  let speaking = false, quiet = 0;
+
+  proc.onaudioprocess = e => {
+    const x = e.inputBuffer.getChannelData(0);
+    let sum = 0;
+    for (let i = 0; i < x.length; i++) sum += x[i] * x[i];
+    const rms = Math.sqrt(sum / x.length);
+    $("mic").style.setProperty("--lvl", Math.min(1, rms * 8));
+
+    if (rms > 0.03) {
+      if (playing.length) { stopAgent(); send({ event: "barge_in" }); }
+      speaking = true; quiet = 0; waitingAudio = false;
+    } else if (speaking && ++quiet > 6) {
+      speaking = false; lastVoice = performance.now(); waitingAudio = true;
+    }
+
+    if (ws && ws.readyState === 1) {
+      const n = Math.floor(x.length / ratio), o = new Int16Array(n);
+      for (let i = 0; i < n; i++) {
+        const v = Math.max(-1, Math.min(1, x[Math.floor(i * ratio)]));
+        o[i] = v * 32767;
+      }
       ws.send(o.buffer);
     }
   };
-  src.connect(proc);proc.connect(ctx.destination);
-}
-function stopMic(){
-  if(proc){proc.disconnect();proc=null}
-  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
-  $("mic").style.setProperty("--lvl",0);
-}
-function openWS(){
-  ws=new WebSocket(CONFIG.WS_URL);ws.binaryType="arraybuffer";
-  ws.onopen=()=>send({event:"set_language",language:$("lang").value});
-  ws.onmessage=e=>{if(typeof e.data==="string")handle(JSON.parse(e.data));else playPCM(e.data)};
-  ws.onerror=()=>setState("Cannot reach the server","Check the backend is running, or tick Demo mode");
-  ws.onclose=()=>{if(live)toggle()};
+  src.connect(proc);
+  proc.connect(ctx.destination);
 }
 
-/* ---- demo mode (no backend) ---- */
-function runMock(){
-  const at=(ms,fn)=>timers.push(setTimeout(fn,ms));
-  at(600,()=>handle({event:"transcript",text:"Sunita Devi ka ANC checkup kiya, weight 52 kilo",is_final:false}));
-  at(1800,()=>handle({event:"transcript",text:"Sunita Devi ka ANC checkup kiya, weight 52 kilo, TT injection lag gaya. Agli visit 20 December.",is_final:true}));
-  at(2600,()=>{handle({event:"state_update",status:"CONFIRMING",record:{beneficiary_id:"MH-0042-17",beneficiary_name:"Sunita Devi",visit_type:"ANC checkup",weight_kg:52,vaccinations_due:["TT booster"],next_visit_date:"20 Dec 2026"}});
-    handle({event:"agent_speech_start",text:"Sunita Devi, ANC checkup, weight 52 kilo, TT booster due, next visit 20 December. Is this correct?"})});
-  at(5500,()=>handle({event:"danger_alert",alert:"Bleeding in pregnancy is on the danger list. Refer to the PHC now.",signs:[{name:"Bleeding in pregnancy"}]}));
-  $("lat").textContent="Reply time: 640 ms (demo)";
+function stopMic() {
+  if (proc) { proc.disconnect(); proc = null; }
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  $("mic").style.setProperty("--lvl", 0);
 }
 
-/* ---- controls ---- */
-async function toggle(){
-  if(live){live=false;$("mic").classList.remove("live");stopMic();stopAgent();timers.forEach(clearTimeout);
-    if(ws)ws.close();setState("Tap and tell me about the visit","Speak in your language. You can mix English words.");return}
-  try{await startMic()}catch(e){setState("Microphone is blocked","Allow the microphone in browser settings, then tap again");return}
-  live=true;$("mic").classList.add("live");setState("Listening…","Tap again when you are done");
-  $("tx").innerHTML="<i>Listening</i>";
-  if($("mock").checked)runMock();else openWS();
+function openWS(onOpenCallback) {
+  if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+    if (ws.readyState === WebSocket.OPEN && onOpenCallback) onOpenCallback();
+    return;
+  }
+  ws = new WebSocket(CONFIG.WS_URL);
+  ws.binaryType = "arraybuffer";
+  ws.onopen = () => {
+    $("statusDot").className = "dot on";
+    $("statusTxt").textContent = "Connected";
+    send({ event: "set_language", language: $("lang").value });
+    if (onOpenCallback) onOpenCallback();
+  };
+  ws.onmessage = e => {
+    if (typeof e.data === "string") handle(JSON.parse(e.data));
+    else playPCM(e.data);
+  };
+  ws.onerror = () => {
+    $("statusDot").className = "dot err";
+    $("statusTxt").textContent = "Offline";
+  };
+  ws.onclose = () => {
+    $("statusDot").className = "dot";
+    $("statusTxt").textContent = "Offline";
+    setTimeout(() => openWS(), 2500);
+  };
 }
-$("mic").onclick=toggle;
-$("fix").onclick=()=>{if(!live)toggle();else setState("Listening…","Say what to fix, for example: weight is 2.8 kilo")};
-$("save").onclick=()=>{if($("mock").checked)handle({event:"record_saved"});else send({event:"confirm_record"})};
-$("lang").onchange=()=>send({event:"set_language",language:$("lang").value});
+
+/* Controls */
+async function toggle() {
+  if (live) {
+    live = false;
+    $("mic").classList.remove("live");
+    stopMic();
+    stopAgent();
+    timers.forEach(clearTimeout);
+    setState("Checking with you…", "Concluded dictation. Processing note and reading back…");
+    const currentTx = $("tx").textContent.trim();
+    const cleanTx = (currentTx === "Nothing yet" || currentTx === "Listening…" || currentTx === "<i>Listening…</i>") ? "" : currentTx;
+    send({ event: "stop_recording", text: cleanTx });
+    return;
+  }
+  try {
+    await startMic();
+  } catch (e) {
+    setState("Microphone is blocked", "Allow microphone in browser settings, then tap again");
+    return;
+  }
+  live = true;
+  $("mic").classList.add("live");
+  setState("Listening…", "Speak your visit notes. Tap mic again when done to read back.");
+  $("tx").innerHTML = "<i>Listening…</i>";
+  openWS();
+}
+
+$("mic").onclick = toggle;
+$("fix").onclick = () => {
+  if (!live) toggle();
+  else setState("Listening…", "Say what to fix, for example: weight is 2.8 kilo");
+};
+$("save").onclick = () => send({ event: "confirm_record" });
+$("lang").onchange = () => send({ event: "set_language", language: $("lang").value });
+
+// Initialize
 renderRecord({});
+openWS();
+loadDbRecords();
 </script>
 </body>
 </html>

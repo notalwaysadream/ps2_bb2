@@ -120,6 +120,27 @@ async def test_extraction_and_voice_correction():
     assert res3.record.is_confirmed is True
     assert res3.status == "CONFIRMED"
 
+@pytest.mark.asyncio
+async def test_kannada_extraction_and_readback():
+    llm = LLMService()
+
+    # Kannada dictation
+    kannada_note = "Beneficiary ID 1042, Sunita avara 3rd ANC checkup madidini. Weight 52 kilo ide. TT injection kottidini, next visit 25 November."
+    res = await llm.process_utterance(kannada_note, language="kn-IN")
+
+    assert res.record.beneficiary_id == "1042"
+    assert res.record.weight == 52.0
+    # Crucial: verify spoken readback is in Kannada, NOT Hindi!
+    spoken = res.spoken_response.lower()
+    assert "maine note kiya" not in spoken
+    assert "kya yeh theek hai" not in spoken
+    assert any(w in spoken for w in ["naanu", "note", "sariyagidiya", "ಮಾಡಿ", "ಸರಿಯಾಗಿದೆಯೇ"])
+
+    # Voice confirmation in Kannada ("Houdu sari ide, save maadi")
+    res_confirm = await llm.process_utterance("Houdu, sari ide, save maadi", current_record=res.record, language="kn-IN")
+    assert res_confirm.record.is_confirmed is True
+    assert "save aagide" in res_confirm.spoken_response.lower() or "ಉಳಿಸಲಾಗಿದೆ" in res_confirm.spoken_response
+
 def test_audio_rms_and_vad():
     handler = AudioStreamHandler(energy_threshold=200.0)
 
@@ -139,3 +160,26 @@ def test_audio_rms_and_vad():
     loud_result = handler.process_chunk(bytes(loud_samples))
     assert loud_result["rms"] > 5000.0
     assert loud_result["speech_detected"] is True
+
+@pytest.mark.asyncio
+async def test_indic_name_extraction_and_ai_disclosure():
+    llm = LLMService()
+
+    # Step 1: Kannada note with Indic name "Shantala" / "ಶಾಂತಲಾ"
+    text1 = "Beneficiary ID 4408, name ಶಾಂತಲಾ, visit type ANC, weight 52 kilo."
+    res1 = await llm.process_utterance(text1, language="kn-IN")
+
+    assert res1.record.beneficiary_id == "4408"
+    assert res1.record.beneficiary_name in ("ಶಾಂತಲಾ", "Shantala")
+    # Verify AI disclosure prefix is present on first readback
+    spoken1 = res1.spoken_response.lower()
+    assert "ai sahayaka" in spoken1 or "ai ಸಹಾಯಕ" in spoken1 or "ai assistant" in spoken1
+    assert res1.record.ai_disclosure_given is True
+
+    # Step 2: Subsequent correction should NOT repeat the AI disclosure prefix
+    text2 = "Alla, weight 54 kilo ide."
+    res2 = await llm.process_utterance(text2, current_record=res1.record, language="kn-IN")
+    assert res2.record.weight == 54.0
+    assert res2.record.beneficiary_name in ("ಶಾಂತಲಾ", "Shantala")
+    spoken2 = res2.spoken_response.lower()
+    assert not spoken2.startswith("naanu ondu ai") and not spoken2.startswith("ನಾನು ಒಂದು ai")
